@@ -1,26 +1,100 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Canopy "Grove" palette — warm botanical light. Ported from the design
+     handoff (canopy.css). Greens carry the brand; neutrals are tinted toward
+     the brand hue, never warm-cream. */
+  --color-background: #f4f7f0; /* surface-2: green-tinted off-white */
+  --color-foreground: #16241c; /* ink */
+  --color-card: #ffffff; /* surface */
+  --color-surface-2: #edf2e7; /* deeper inset surface (chips, wells) */
+  --color-muted: #5a6a60;
+  --color-faint: #8c9b90; /* third text tier — kickers, timestamps */
+  --color-border: #e6ece0; /* line */
+  --color-border-strong: #d6decc; /* line-strong */
+
+  --color-accent: #1c7a53;
+  --color-accent-hover: #155f40; /* accent-press */
+  --color-accent-soft: #1c7a531a;
+
+  --color-danger: #d23a2e;
+  --color-danger-ink: #8e211a; /* readable red on danger-soft */
+  --color-danger-soft: #d23a2e1f;
+
+  --color-warning: #b0760d; /* caution */
+  --color-warning-ink: #79520a; /* readable amber on warning-soft */
+  --color-warning-soft: #b0760d24;
+
+  --font-sans: var(--font-schibsted);
+  --font-mono: var(--font-jetbrains);
+
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+
+  /* Neutral ink shadow — no colored glow. */
+  --shadow-soft: 0 1px 2px rgb(22 36 28 / 0.05), 0 12px 30px rgb(22 36 28 / 0.07);
+
+  --animate-halo: halo 4s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.4s ease-out both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes halo {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.55;
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  overscroll-behavior-y: none;
+  min-height: 100dvh;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hero surface — a fine brand-green dot grid lifted from the handoff board.
+   Architectural texture, not a glow. */
+.hero-bg {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgb(28 122 83 / 0.05) 1.5px,
+    transparent 0
+  );
+  background-size: 26px 26px;
 }
