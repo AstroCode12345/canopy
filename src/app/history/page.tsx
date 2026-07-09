@@ -7,18 +7,16 @@ import {
   AlertTriangle,
   ArrowRight,
   Clock,
+  ImageOff,
   ShieldCheck,
   Trash2,
   X,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { ScanResultCard } from "@/components/ScanResultCard";
-import {
-  deleteScan,
-  getScans,
-  resultSeverity,
-  type Scan,
-} from "@/lib/storage";
+import { deleteScanDb, getScansDb } from "@/lib/db";
+import { resultVerdict, type Scan } from "@/lib/storage";
+import { useProfile } from "@/lib/useProfile";
 
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
@@ -34,10 +32,18 @@ function formatRelative(ts: number): string {
 }
 
 function severityRowVisuals(scan: Scan) {
-  const sev = resultSeverity(scan.result);
+  const sev = resultVerdict(scan.result);
+  if (sev === "unreadable") {
+    return {
+      iconBg: "bg-foreground/[0.06]",
+      Icon: ImageOff,
+      iconColor: "text-muted",
+      summary: "Couldn't read the label. Scan it again",
+      fallbackTitle: "Unreadable scan",
+    };
+  }
   if (sev === "allergy") {
     return {
-      stripe: "border-l-[3px] border-l-danger/70",
       iconBg: "bg-danger-soft",
       Icon: AlertTriangle,
       iconColor: "text-danger",
@@ -50,7 +56,6 @@ function severityRowVisuals(scan: Scan) {
   }
   if (sev === "intolerance") {
     return {
-      stripe: "border-l-[3px] border-l-warning/70",
       iconBg: "bg-warning-soft",
       Icon: AlertCircle,
       iconColor: "text-warning",
@@ -59,7 +64,6 @@ function severityRowVisuals(scan: Scan) {
     };
   }
   return {
-    stripe: "border-l-[3px] border-l-accent/60",
     iconBg: "bg-accent-soft",
     Icon: ShieldCheck,
     iconColor: "text-accent",
@@ -69,18 +73,27 @@ function severityRowVisuals(scan: Scan) {
 }
 
 export default function HistoryPage() {
+  const { supabase, user } = useProfile();
   const [scans, setScans] = useState<Scan[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [active, setActive] = useState<Scan | null>(null);
 
   useEffect(() => {
-    setScans(getScans());
-    setHydrated(true);
-  }, []);
+    if (!user) return; // wait for auth to resolve before fetching
+    let cancelled = false;
+    getScansDb(supabase).then((list) => {
+      if (cancelled) return;
+      setScans(list);
+      setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, user]);
 
-  const handleDelete = (id: string) => {
-    const remaining = deleteScan(id);
-    setScans(remaining);
+  const handleDelete = async (id: string) => {
+    await deleteScanDb(supabase, id);
+    setScans((prev) => prev.filter((s) => s.id !== id));
     setActive(null);
   };
 
@@ -120,7 +133,7 @@ export default function HistoryPage() {
               key={scan.id}
               type="button"
               onClick={() => setActive(scan)}
-              className={`flex w-full items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-accent/40 ${v.stripe}`}
+              className="flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-accent/40"
             >
               <div className={`shrink-0 rounded-full p-2 ${v.iconBg}`}>
                 <Icon className={`h-5 w-5 ${v.iconColor}`} />

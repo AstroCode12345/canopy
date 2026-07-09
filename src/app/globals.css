@@ -36,6 +36,11 @@
 
   --animate-halo: halo 4s ease-in-out infinite;
   --animate-fade-in: fade-in 0.4s ease-out both;
+  /* Opacity-only on purpose: a transform here would make this wrapper a new
+     containing block for position:fixed descendants (BottomNav, the
+     fullscreen camera view) for the animation's duration, making them jump
+     relative to the page instead of staying pinned to the viewport. */
+  --animate-page-fade: page-fade 0.22s ease-out both;
 }
 
 @keyframes halo {
@@ -57,6 +62,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

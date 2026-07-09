@@ -1,0 +1,289 @@
+{
+  "comment": "Red-team regression fixtures for the allergen pipeline, reconstructed from the July 2026 safety audit (T1-T20). labelLines are rendered to images/<id>.jpg by gen-images.mjs; run.mjs sends them through POST /api/scan. auditBaseline records what the original audit observed BEFORE the C2 fix.",
+  "profile": [
+    { "id": "peanuts", "label": "Peanuts", "severity": "allergy" },
+    { "id": "tree-nuts", "label": "Tree nuts", "severity": "allergy" },
+    { "id": "dairy", "label": "Dairy", "severity": "allergy" },
+    { "id": "eggs", "label": "Eggs", "severity": "allergy" },
+    { "id": "sesame", "label": "Sesame", "severity": "allergy" },
+    { "id": "fish", "label": "Fish", "severity": "allergy" },
+    { "id": "gluten", "label": "Gluten / Wheat", "severity": "intolerance" },
+    { "id": "soy", "label": "Soy", "severity": "intolerance" }
+  ],
+  "cases": [
+    {
+      "id": "T1",
+      "title": "Hidden milk: ghee, curds, sodium caseinate",
+      "kind": "live",
+      "labelLines": [
+        "Rice flour, palm oil, ghee, dried curds,",
+        "sodium caseinate, salt, turmeric."
+      ],
+      "mayContain": true,
+      "required": ["Dairy"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS"
+    },
+    {
+      "id": "T2",
+      "title": "Hidden egg: lysozyme, ovalbumin",
+      "kind": "live",
+      "labelLines": [
+        "Water, potato starch, lysozyme, ovalbumin,",
+        "citric acid, natural colour."
+      ],
+      "mayContain": true,
+      "required": ["Eggs"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS"
+    },
+    {
+      "id": "T3",
+      "title": "Confection names hide tree nuts: marzipan, nougat, praline",
+      "kind": "live",
+      "labelLines": [
+        "Sugar, glucose syrup, marzipan (28%),",
+        "nougat pieces, praline filling, cocoa mass,",
+        "emulsifier: sunflower lecithin, vanilla."
+      ],
+      "mayContain": true,
+      "required": ["Tree nuts"],
+      "forbidden": [],
+      "expectStatus": "flagged",
+      "warnIfFlagged": ["Soy"],
+      "warnNote": "Soy flagged from SUNFLOWER lecithin is the M1 false positive (out of scope this session) - warn, not fail.",
+      "auditBaseline": "FAIL",
+      "notes": "CRITICAL C2 case. Audit: nothing severe flagged; only a bogus mild Soy from sunflower lecithin."
+    },
+    {
+      "id": "T4",
+      "title": "Dish name hides peanut: satay seasoning (+ fish sauce control)",
+      "kind": "live",
+      "labelLines": [
+        "Rice noodles, satay seasoning, fish sauce",
+        "(anchovy extract, salt), sugar, chilli,",
+        "garlic, tamarind paste."
+      ],
+      "mayContain": true,
+      "required": ["Fish", "Peanuts"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "FAIL",
+      "notes": "CRITICAL C2 case. Audit: Fish caught via anchovy, but satay seasoning was NOT flagged for peanuts."
+    },
+    {
+      "id": "T5",
+      "title": "Gluten semantics: barley malt extract (not wheat)",
+      "kind": "live",
+      "labelLines": [
+        "Corn flakes (milled corn, sugar, barley",
+        "malt extract, malt vinegar powder, salt,",
+        "niacin, iron, vitamin B12)."
+      ],
+      "mayContain": true,
+      "required": ["Gluten / Wheat"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS"
+    },
+    {
+      "id": "T6",
+      "title": "Hidden soy: TVP, edamame",
+      "kind": "live",
+      "labelLines": [
+        "Textured vegetable protein, water,",
+        "edamame beans, rapeseed oil, yeast",
+        "extract, smoked paprika, salt."
+      ],
+      "mayContain": true,
+      "required": ["Soy"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS"
+    },
+    {
+      "id": "T7",
+      "title": "French label incl. trace advisory (fruits a coque)",
+      "kind": "live",
+      "labelLines": [
+        "Farine de ble, lait ecreme en poudre,",
+        "arachides grillees, huile de tournesol,",
+        "sucre, sel. Peut contenir des traces de",
+        "fruits a coque."
+      ],
+      "mayContain": true,
+      "required": ["Peanuts", "Dairy", "Gluten / Wheat", "Tree nuts"],
+      "forbidden": [],
+      "expectAdvisories": ["Tree nuts"],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "2026-07-02 (H1 fix): Tree nuts here is advisory-only ('peut contenir des traces de fruits a coque'), never a direct ingredient. Also asserts it lands in the advisories[] channel, not just the flagged union. KNOWN INTERMITTENT FAILURE (roughly 1 in 4-8 observed across repeated runs, pre-existing and unrelated to H1/H2): two variants seen — (a) the model occasionally mistranslates 'fruits a coque' as 'fish'/'shellfish' instead of tree nuts; (b) it occasionally omits Gluten/Wheat (from 'Farine de ble') entirely from directMatches despite naming it correctly in reasoning. Neither is an evidence-channel or profile-matching bug — matchAllergenLabel() correctly resolved whatever name the model DID produce in every observed case; the miss is upstream, in the model's own French-label reading/translation consistency. Out of scope for H1/H2; flagging for a future language-accuracy or reasoning-consistency pass, same category as T14's Dairy flakiness."
+    },
+    {
+      "id": "T8",
+      "title": "Compound parenthetical: milk chocolate (...soy lecithin), wheat flour",
+      "kind": "live",
+      "labelLines": [
+        "Milk chocolate 32% (sugar, cocoa butter,",
+        "whole milk powder, cocoa mass, soy",
+        "lecithin), wheat flour, invert sugar syrup."
+      ],
+      "mayContain": true,
+      "required": ["Dairy", "Soy", "Gluten / Wheat"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "2026-07-02 (H2 FIXED): audit originally observed Soy duplicated into flaggedAllergies here (tier drift). As of the H1/H2 session, flaggedAllergies/flaggedIntolerances are derived entirely server-side from a profile lookup (matchAllergenLabel() in route.ts) rather than trusted from the model, which makes tier drift and both-array duplication structurally impossible, not just unlikely. This case is now the live regression guard for that: run.mjs asserts zero tier-drift/duplicate warnings as a hard FAIL, and this has held clean across multiple repeated runs."
+    },
+    {
+      "id": "T9",
+      "title": "Trace advisory with flagMayContain ON",
+      "kind": "live",
+      "labelLines": [
+        "Oat flakes, honey, dried cranberries,",
+        "sunflower seeds, cinnamon.",
+        "May contain traces of peanuts and",
+        "sesame. Made on shared equipment."
+      ],
+      "mayContain": true,
+      "required": ["Peanuts", "Sesame"],
+      "forbidden": [],
+      "expectAdvisories": ["Peanuts", "Sesame"],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "2026-07-02 (H1 fix): now also asserts the model reports these in the dedicated advisories[] channel."
+    },
+    {
+      "id": "T10",
+      "title": "Trace advisory with flagMayContain OFF",
+      "kind": "live",
+      "imageFrom": "T9",
+      "mayContain": false,
+      "required": [],
+      "forbidden": ["Peanuts", "Sesame"],
+      "expectAdvisories": ["Peanuts", "Sesame"],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "2026-07-02 (H1 FIXED): advisory handling is now deterministic. The model always reports advisories in their own channel regardless of the toggle; the server decides whether to merge them into the flagged arrays. With the toggle OFF, merging must NEVER happen (forbidden), but advisories must still be visible in the dedicated channel (expectAdvisories) so nothing is silently dropped. Replaces the old advisoryLenient heuristic, which only existed because pre-fix behavior was nondeterministic."
+    },
+    {
+      "id": "T11",
+      "title": "Benign control - false positive canary",
+      "kind": "live",
+      "labelLines": [
+        "Water, cane sugar, lemon juice",
+        "concentrate, natural flavour, spices,",
+        "citric acid, ascorbic acid."
+      ],
+      "mayContain": true,
+      "required": [],
+      "forbidden": [
+        "Peanuts",
+        "Tree nuts",
+        "Dairy",
+        "Eggs",
+        "Sesame",
+        "Fish",
+        "Gluten / Wheat",
+        "Soy"
+      ],
+      "warnIfFlagged": [],
+      "expectSafe": true,
+      "expectStatus": "clear",
+      "auditBaseline": "PASS",
+      "notes": "If this starts failing after prompt changes, the composite-foods rule is over-flagging (M1 trend signal)."
+    },
+    {
+      "id": "T12",
+      "title": "Unreadable image (blank) - model-level contract",
+      "kind": "live",
+      "blank": true,
+      "mayContain": true,
+      "required": [],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "expectSafe": false,
+      "expectEmptyArrays": true,
+      "expectStatus": "unreadable",
+      "auditBaseline": "PASS",
+      "notes": "C1 regression guard: the server MUST return status='unreadable' here. A 'clear' status on this case is the exact bug that rendered green 'Looks safe' for unreadable photos."
+    },
+    {
+      "id": "T13",
+      "title": "Foodstuff names: brioche, seitan, mayonnaise",
+      "kind": "live",
+      "labelLines": [
+        "Brioche bun, seitan strips, mayonnaise,",
+        "iceberg lettuce, pickled onion, mustard."
+      ],
+      "mayContain": true,
+      "required": ["Eggs", "Gluten / Wheat", "Dairy"],
+      "forbidden": [],
+      "expectStatus": "flagged",
+      "warnIfFlagged": [],
+      "auditBaseline": "FAIL",
+      "notes": "C2 case. Audit: eggs (mayonnaise) and wheat (seitan/brioche) caught, but Dairy in brioche (butter-enriched by definition) was missed."
+    },
+    {
+      "id": "T14",
+      "title": "Japanese label (wheat flour, whole milk powder, egg, peanuts)",
+      "kind": "live",
+      "labelLines": [
+        "小麦粉、砂糖、全粉乳、卵、ピーナッツ、",
+        "植物油脂、食塩、香料",
+        "（原材料の一部に乳成分・小麦を含む）"
+      ],
+      "mayContain": true,
+      "required": ["Peanuts", "Eggs", "Dairy", "Gluten / Wheat"],
+      "forbidden": [],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "2026-07-02: fixture evolved (added the mandatory JP allergen callout line; more realistic). KNOWN OPEN DEFECT, expect intermittent Dairy failures (~1 in 3): Haiku sometimes OCR-confuses 全粉乳 (milk powder) with 全粒粉 (whole wheat), AND separately sometimes acknowledges 乳成分 (milk components) in its reasoning while omitting Dairy from the flagged arrays. That reasoning/array inconsistency is a real false negative to be fixed by server-side reconciliation (H2 session) or a prompt consistency rule. Do not relax this fixture to make the suite green. Also exposed live T19 label drift ('Wheat / Gluten' vs profile 'Gluten / Wheat'), scored as WARN."
+    },
+    {
+      "id": "T15",
+      "title": "Unsupported media type (HEIC) must surface an error, never a verdict",
+      "kind": "error-path",
+      "mayContain": true,
+      "auditBaseline": "PASS",
+      "notes": "Sends data:image/heic junk. PASS = non-200 response (error card in UI). M3 (client transcode) is out of scope."
+    },
+    {
+      "id": "T16",
+      "title": "Very long label truncation (max_tokens / key order)",
+      "kind": "manual",
+      "auditBaseline": "PASS",
+      "notes": "M4, out of scope. Traced: ingredients-first key order truncates into a parse failure = 502 error card (fail-safe). Not automatable deterministically."
+    },
+    {
+      "id": "T17",
+      "title": "Contradictory model output (safe:true + non-empty flags)",
+      "kind": "manual",
+      "auditBaseline": "PASS",
+      "notes": "M2, out of scope as an audit item, but resolved as a side effect of the C1 fix: /api/scan now recomputes safe from status server-side and never trusts the model's own safe field directly."
+    },
+    {
+      "id": "T18",
+      "title": "Tier drift: returned label not matching the user's severity tier",
+      "kind": "manual",
+      "auditBaseline": "FAIL-FIXED",
+      "notes": "H2, FIXED 2026-07-02. Root cause: /api/scan used to trust the model's own flaggedAllergies/flaggedIntolerances arrays directly. Fix: the model no longer reports those arrays at all — it reports raw evidence (directMatches, advisories) and the server resolves each entry's severity via a profile lookup (matchAllergenLabel()), then partitions into flaggedAllergies/flaggedIntolerances by that looked-up severity. Since each match resolves to exactly one profile Allergen with exactly one severity, drift and both-array duplication are now architecturally impossible, not just less likely. No dedicated fixture needed: T8 (which showed live tier drift in the original audit) is the regression guard, and run.mjs now hard-FAILs on any tier drift or duplicate-array placement, on every live case, every run."
+    },
+    {
+      "id": "T19",
+      "title": "Label text drift (case/wording differs from profile labels)",
+      "kind": "manual",
+      "auditBaseline": "PASS",
+      "notes": "2026-07-02: as of the H1/H2 fix, output labels always come from the profile's own canonical string (matchAllergenLabel() resolves the model's wording back to the matched profile Allergen, then uses ITS .label) — so wording drift in the response should now be structurally impossible, the same guarantee that fixed T18's tier drift. The runner keeps a token-set fallback as a defensive net (scores as an 'UNEXPECTED' WARN, not a FAIL, if it ever fires) rather than assuming the invariant holds forever. No dedicated fixture; property is checked implicitly on every case, and has held clean across repeated runs (2026-07-02)."
+    },
+    {
+      "id": "T20",
+      "title": "Unreadable scan renders green 'Looks safe' in UI",
+      "kind": "manual",
+      "auditBaseline": "FAIL-FIXED",
+      "notes": "C1, FIXED 2026-07-02: ScanResultCard, history rows, and home rows all branch on the new three-state status field. Model-level contract covered live by T12; UI surfaces verified manually in-browser that session (not automated here)."
+    }
+  ]
+}

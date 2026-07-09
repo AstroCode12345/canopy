@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { ShieldCheck, AlertTriangle, AlertCircle } from "lucide-react";
 import {
-  resultSeverity,
+  ShieldCheck,
+  AlertTriangle,
+  AlertCircle,
+  ImageOff,
+} from "lucide-react";
+import {
+  resultVerdict,
   type ScanResult,
 } from "@/lib/storage";
 
@@ -10,15 +15,22 @@ interface Props {
 }
 
 export function ScanResultCard({ result }: Props) {
-  const severity = resultSeverity(result);
-  const { flaggedAllergies, flaggedIntolerances, ingredients, reasoning } =
-    result;
+  const verdict = resultVerdict(result);
+  const {
+    flaggedAllergies,
+    flaggedIntolerances,
+    advisories,
+    ingredients,
+    reasoning,
+  } = result;
 
   const total = flaggedAllergies.length + flaggedIntolerances.length;
 
-  // Per-severity visual tokens
+  // Per-verdict visual tokens. "unreadable" is deliberately neutral: it is
+  // not a safety verdict, so it must not borrow green (clear), red (avoid),
+  // or amber (be aware).
   const visuals =
-    severity === "allergy"
+    verdict === "allergy"
       ? {
           bg: "bg-danger-soft",
           iconBg: "bg-danger text-white",
@@ -27,7 +39,7 @@ export function ScanResultCard({ result }: Props) {
           sub: `${flaggedAllergies.length} severe${flaggedIntolerances.length ? ` + ${flaggedIntolerances.length} mild` : ""} flagged`,
           Icon: AlertTriangle,
         }
-      : severity === "intolerance"
+      : verdict === "intolerance"
         ? {
             bg: "bg-warning-soft",
             iconBg: "bg-warning text-white",
@@ -36,14 +48,23 @@ export function ScanResultCard({ result }: Props) {
             sub: `${flaggedIntolerances.length} mild flagged`,
             Icon: AlertCircle,
           }
-        : {
-            bg: "bg-accent-soft",
-            iconBg: "bg-accent text-white",
-            title: "Looks safe for you",
-            titleColor: "text-accent",
-            sub: "No matches in your allergen list",
-            Icon: ShieldCheck,
-          };
+        : verdict === "unreadable"
+          ? {
+              bg: "bg-foreground/[0.06]",
+              iconBg: "bg-muted text-white",
+              title: "Couldn't read this label",
+              titleColor: "text-foreground",
+              sub: "Not a safety check. Retake the photo",
+              Icon: ImageOff,
+            }
+          : {
+              bg: "bg-accent-soft",
+              iconBg: "bg-accent text-white",
+              title: "Looks safe for you",
+              titleColor: "text-accent",
+              sub: "No matches in your allergen list",
+              Icon: ShieldCheck,
+            };
 
   const Icon = visuals.Icon;
 
@@ -107,6 +128,30 @@ export function ScanResultCard({ result }: Props) {
       </div>
 
       <div className="space-y-5 p-6">
+        {advisories.length > 0 && (
+          <div className="rounded-2xl bg-warning-soft p-4 ring-1 ring-warning/20">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+              <div className="min-w-0 flex-1">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-warning">
+                  Cross-contact warning{advisories.length > 1 ? "s" : ""}
+                </h4>
+                <ul className="mt-1.5 space-y-1.5">
+                  {advisories.map((adv, i) => (
+                    <li
+                      key={`${adv.allergen}-${i}`}
+                      className="text-sm leading-snug text-foreground"
+                    >
+                      <span className="font-medium">{adv.allergen}</span>
+                      <span className="text-muted"> — &ldquo;{adv.phrase}&rdquo;</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
             Reasoning

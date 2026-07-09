@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk, JetBrains_Mono } from "next/font/google";
+import { PageShell } from "@/components/PageShell";
 import "./globals.css";
 
 const sans = Schibsted_Grotesk({
@@ -42,7 +43,7 @@ export default function RootLayout({
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-dvh bg-background text-foreground flex flex-col">
-        {children}
+        <PageShell>{children}</PageShell>
       </body>
     </html>
   );

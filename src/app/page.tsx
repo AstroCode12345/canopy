@@ -8,24 +8,34 @@ import {
   ArrowRight,
   Camera,
   ChevronRight,
+  ImageOff,
   Leaf,
   ShieldCheck,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { EmptyState } from "@/components/EmptyState";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { getAllergensDb, getScansDb } from "@/lib/db";
 import {
-  getAllergens,
-  getScans,
   hasSeenOnboarding,
   markOnboardingSeen,
-  resultSeverity,
+  resultVerdict,
   type Allergen,
   type Scan,
 } from "@/lib/storage";
+import { useProfile } from "@/lib/useProfile";
 
 function recentVisuals(scan: Scan) {
-  const sev = resultSeverity(scan.result);
+  const sev = resultVerdict(scan.result);
+  if (sev === "unreadable") {
+    return {
+      iconBg: "bg-foreground/[0.06]",
+      Icon: ImageOff,
+      iconColor: "text-muted",
+      summary: "Couldn't read the label. Scan it again",
+      fallbackTitle: "Unreadable scan",
+    };
+  }
   if (sev === "allergy") {
     return {
       iconBg: "bg-danger-soft",
@@ -57,6 +67,8 @@ function recentVisuals(scan: Scan) {
 }
 
 export default function HomePage() {
+  // Real account profile from Supabase (name lives in the profiles table now).
+  const { supabase, user, profile } = useProfile();
   const [recent, setRecent] = useState<Scan[]>([]);
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [stats, setStats] = useState({ scanned: 0, flagged: 0 });
@@ -65,15 +77,6 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    const scans = getScans();
-    const list = getAllergens();
-    setRecent(scans.slice(0, 3));
-    setAllergens(list);
-    setStats({
-      scanned: scans.length,
-      flagged: scans.filter((s) => resultSeverity(s.result) !== "safe").length,
-    });
-
     const now = new Date();
     const h = now.getHours();
     setMeta({
@@ -85,13 +88,37 @@ export default function HomePage() {
         day: "numeric",
       }),
     });
-
-    // Show onboarding only on truly first-ever visit (no flag + no data)
-    if (!hasSeenOnboarding() && list.length === 0 && scans.length === 0) {
-      setShowOnboarding(true);
-    }
-    setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!user) return; // wait for auth to resolve before fetching
+    let cancelled = false;
+
+    Promise.all([getScansDb(supabase), getAllergensDb(supabase)]).then(
+      ([scans, list]) => {
+        if (cancelled) return;
+        setRecent(scans.slice(0, 3));
+        setAllergens(list);
+        setStats({
+          scanned: scans.length,
+          flagged: scans.filter((s) => {
+            const v = resultVerdict(s.result);
+            return v === "allergy" || v === "intolerance";
+          }).length,
+        });
+
+        // Show onboarding only on truly first-ever visit (no flag + no data)
+        if (!hasSeenOnboarding() && list.length === 0 && scans.length === 0) {
+          setShowOnboarding(true);
+        }
+        setHydrated(true);
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, user]);
 
   const dismissOnboarding = () => {
     markOnboardingSeen();
@@ -108,6 +135,9 @@ export default function HomePage() {
             </p>
             <h1 className="mt-1.5 text-[1.9rem] font-bold leading-tight tracking-tight">
               {meta.greet || "Welcome"}
+              {profile?.display_name
+                ? `, ${profile.display_name.trim().split(/\s+/)[0]}`
+                : ""}
             </h1>
           </div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5">

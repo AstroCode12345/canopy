@@ -6,16 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "redteam": "npm run redteam:unit && node tests/allergen-redteam/run.mjs",
+    "redteam:unit": "node --experimental-strip-types tests/allergen-redteam/legacy-status.test.mjs",
+    "redteam:images": "node tests/allergen-redteam/gen-images.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

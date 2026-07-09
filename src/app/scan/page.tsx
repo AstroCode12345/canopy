@@ -13,18 +13,15 @@ import {
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { ScanResultCard } from "@/components/ScanResultCard";
-import {
-  addScan,
-  getAllergens,
-  getSettings,
-  type Allergen,
-  type ScanResult,
-} from "@/lib/storage";
+import { addScanDb, getAllergensDb } from "@/lib/db";
+import { resultVerdict, type Allergen, type ScanResult } from "@/lib/storage";
+import { useProfile } from "@/lib/useProfile";
 
 type Status = "capture" | "preview" | "analyzing" | "result" | "error";
 
 export default function ScanPage() {
   const router = useRouter();
+  const { supabase, user, profile } = useProfile();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [status, setStatus] = useState<Status>("capture");
@@ -41,9 +38,17 @@ export default function ScanPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setAllergens(getAllergens());
-    setHydrated(true);
-  }, []);
+    if (!user) return; // wait for auth to resolve before fetching
+    let cancelled = false;
+    getAllergensDb(supabase).then((list) => {
+      if (cancelled) return;
+      setAllergens(list);
+      setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, user]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -88,7 +93,7 @@ export default function ScanPage() {
     };
   }, [status, hydrated, allergens.length, startCamera, stopCamera]);
 
-  const usePhoto = (dataUrl: string) => {
+  const applyPhoto = (dataUrl: string) => {
     setImageDataUrl(dataUrl);
     setResult(null);
     setError("");
@@ -107,19 +112,19 @@ export default function ScanPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    usePhoto(canvas.toDataURL("image/jpeg", 0.85));
+    applyPhoto(canvas.toDataURL("image/jpeg", 0.85));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => usePhoto(reader.result as string);
+    reader.onload = () => applyPhoto(reader.result as string);
     reader.readAsDataURL(file);
   };
 
   const handleAnalyze = async () => {
-    if (!imageDataUrl) return;
+    if (!imageDataUrl || !user) return;
     setStatus("analyzing");
     setError("");
     try {
@@ -129,7 +134,7 @@ export default function ScanPage() {
         body: JSON.stringify({
           imageDataUrl,
           allergens,
-          flagMayContain: getSettings().flagMayContain,
+          flagMayContain: profile?.flag_may_contain ?? true,
         }),
       });
       const json = await res.json();
@@ -139,15 +144,19 @@ export default function ScanPage() {
         return;
       }
       const newResult = json as ScanResult;
+      // Show the verdict immediately — don't make the user wait on the
+      // database write to see their result. The save happens in the
+      // background; /api/scan itself never touches the database (see
+      // src/lib/db.ts), so this is the one place a scan actually gets saved.
       setResult(newResult);
       setStatus("result");
-      addScan({
-        id: crypto.randomUUID(),
-        createdAt: Date.now(),
-        foodName: foodName.trim() || undefined,
-        allergensAtTime: allergens,
-        result: newResult,
-      });
+      addScanDb(
+        supabase,
+        user.id,
+        foodName.trim() || undefined,
+        newResult,
+        allergens,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Network error");
       setStatus("error");
@@ -339,7 +348,9 @@ export default function ScanPage() {
         </h1>
         <p className="mt-1 text-sm text-muted">
           {status === "result"
-            ? "Here's what Canopy found."
+            ? result && resultVerdict(result) === "unreadable"
+              ? "That photo wasn't clear enough."
+              : "Here's what Canopy found."
             : status === "analyzing"
               ? "Reading the label…"
               : "Check the photo, then analyze."}
