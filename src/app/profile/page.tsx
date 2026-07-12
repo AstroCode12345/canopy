@@ -33,12 +33,10 @@ export default function ProfilePage() {
     if (!user) return;
     setSaving(true);
     const ok = await replaceAllergensDb(supabase, user.id, allergens);
+    // No refetch needed: the editor keys chips on label, not id, so what's
+    // on screen already reflects the saved state. Saving stores label +
+    // severity, which is exactly what's shown.
     if (ok) {
-      // Refetch so local state picks up the real database-assigned ids
-      // (custom allergens added in this session had temporary client ids
-      // until now — see AllergenEditor's addCustom()).
-      const fresh = await getAllergensDb(supabase);
-      setAllergens(fresh);
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1500);
     }

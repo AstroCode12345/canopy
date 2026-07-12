@@ -251,6 +251,34 @@
       "notes": "Sends data:image/heic junk. PASS = non-200 response (error card in UI). M3 (client transcode) is out of scope."
     },
     {
+      "id": "T21",
+      "title": "Free-from facility statement must NOT flag as cross-contact",
+      "kind": "live",
+      "labelLines": [
+        "Rice flour, cane sugar, sunflower oil,",
+        "dried apple, cinnamon, sea salt.",
+        "Made in a dedicated peanut and tree nut",
+        "free facility."
+      ],
+      "mayContain": true,
+      "required": [],
+      "forbidden": [
+        "Peanuts",
+        "Tree nuts",
+        "Dairy",
+        "Eggs",
+        "Sesame",
+        "Fish",
+        "Gluten / Wheat",
+        "Soy"
+      ],
+      "forbiddenAdvisories": ["Peanuts", "Tree nuts"],
+      "expectSafe": true,
+      "expectStatus": "clear",
+      "auditBaseline": "FAIL-FIXED",
+      "notes": "2026-07-08 regression guard for a live false positive found on the deployed app: a fig/blueberry bar label reading 'Made in a dedicated peanut and tree nut FREE facility' was flagged as a Tree nuts cross-contact advisory (and merged into the severe flag with mayContain on). The model was spotting the words 'tree nut' next to 'facility' without reading the POLARITY of the sentence (free-FROM = absence = reassurance, the opposite of 'may contain'). None of this label's real ingredients are on the profile, so the correct verdict is clean. forbidden asserts nothing flags; forbiddenAdvisories asserts the free-from allergens never even enter the advisories channel. Fixed via the POLARITY rule + worked counter-example in buildUserPrompt()."
+    },
+    {
       "id": "T16",
       "title": "Very long label truncation (max_tokens / key order)",
       "kind": "manual",

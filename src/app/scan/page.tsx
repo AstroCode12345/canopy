@@ -101,26 +101,48 @@ export default function ScanPage() {
     setStatus("preview");
   };
 
+  // Shared by both capture paths so a gallery pick gets the same downscale
+  // the camera already did: full-res phone photos (12+ MP) upload slower and
+  // burn mobile data for no benefit, since the model caps out at a fixed
+  // internal resolution regardless of what's sent.
+  const MAX_PHOTO_WIDTH = 1280;
+  const JPEG_QUALITY = 0.85;
+
+  const encodeFromSource = (
+    source: CanvasImageSource,
+    srcWidth: number,
+    srcHeight: number,
+  ): string | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const scale = Math.min(1, MAX_PHOTO_WIDTH / srcWidth);
+    canvas.width = Math.round(srcWidth * scale);
+    canvas.height = Math.round(srcHeight * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+  };
+
   const capturePhoto = () => {
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas || !video.videoWidth) return;
-    const maxW = 1280;
-    const scale = Math.min(1, maxW / video.videoWidth);
-    canvas.width = Math.round(video.videoWidth * scale);
-    canvas.height = Math.round(video.videoHeight * scale);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    applyPhoto(canvas.toDataURL("image/jpeg", 0.85));
+    if (!video || !video.videoWidth) return;
+    const dataUrl = encodeFromSource(video, video.videoWidth, video.videoHeight);
+    if (dataUrl) applyPhoto(dataUrl);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => applyPhoto(reader.result as string);
-    reader.readAsDataURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      const dataUrl = encodeFromSource(img, img.naturalWidth, img.naturalHeight);
+      URL.revokeObjectURL(objectUrl);
+      if (dataUrl) applyPhoto(dataUrl);
+    };
+    img.onerror = () => URL.revokeObjectURL(objectUrl);
+    img.src = objectUrl;
   };
 
   const handleAnalyze = async () => {

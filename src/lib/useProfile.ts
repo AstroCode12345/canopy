@@ -28,9 +28,16 @@ export function useProfile() {
     let cancelled = false;
 
     async function load() {
+      // getSession() reads the session straight from the cookie with NO
+      // network call, unlike getUser() which round-trips to Supabase's auth
+      // server. That round-trip was on the critical path of every page load.
+      // It's safe to trust the cookie here: middleware.ts revalidates and
+      // refreshes the token server-side on every navigation before the page
+      // renders, so the session the client reads is already fresh and vetted.
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (cancelled) return;
       setUser(user);
 

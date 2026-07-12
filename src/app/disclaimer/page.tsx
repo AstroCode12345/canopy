@@ -40,7 +40,7 @@ export default function DisclaimerPage() {
             <AlertTriangle className="h-5 w-5" />
           </div>
           <h2 className="text-base font-semibold text-danger">
-            Important — please read
+            Please read this first
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-foreground">
             Canopy is an AI tool that helps you spot allergens on food labels.{" "}
@@ -80,9 +80,9 @@ export default function DisclaimerPage() {
           <p className="mt-2 text-sm leading-relaxed text-muted">
             When Canopy says &ldquo;Looks safe for you,&rdquo; it means the AI
             didn&apos;t find a direct match for the allergens you saved. It
-            does <strong>not</strong> mean the product is 100% safe — only that
-            nothing obvious flagged. Cross-contamination, hidden ingredients,
-            and label changes can still happen.
+            does <strong>not</strong> mean the product is 100% safe. It just
+            means nothing obvious got flagged. Cross-contamination, hidden
+            ingredients, and label changes can still happen.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export default function DisclaimerPage() {
           <ul className="mt-3 space-y-2 text-sm text-muted">
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-              <span>Bright, even lighting works best — avoid shadows.</span>
+              <span>Bright, even lighting works best. Skip the shadows.</span>
             </li>
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
@@ -111,8 +111,8 @@ export default function DisclaimerPage() {
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
               <span>
-                Watch for &ldquo;May contain traces of&hellip;&rdquo; warnings
-                — Canopy will flag those too.
+                Watch for &ldquo;may contain traces of&hellip;&rdquo;
+                warnings. Canopy flags those too.
               </span>
             </li>
             <li className="flex gap-2">
@@ -129,7 +129,7 @@ export default function DisclaimerPage() {
             href="/scan"
             className="inline-flex items-center rounded-full bg-accent px-6 py-3 text-base font-semibold text-white shadow-soft"
           >
-            Got it — let&apos;s scan
+            Got it, start scanning
           </Link>
         </div>
       </main>

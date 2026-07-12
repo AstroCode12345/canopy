@@ -48,7 +48,7 @@ export default function WelcomePage() {
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint" />
             <span>
               Canopy flags allergens it finds on a label. It can&apos;t
-              promise what isn&apos;t listed — always check the pack.
+              promise what isn&apos;t listed, so always check the pack.
             </span>
           </p>
         </div>

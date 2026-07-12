@@ -143,7 +143,7 @@ export function ScanResultCard({ result }: Props) {
                       className="text-sm leading-snug text-foreground"
                     >
                       <span className="font-medium">{adv.allergen}</span>
-                      <span className="text-muted"> — &ldquo;{adv.phrase}&rdquo;</span>
+                      <span className="text-muted">: &ldquo;{adv.phrase}&rdquo;</span>
                     </li>
                   ))}
                 </ul>
@@ -154,7 +154,7 @@ export function ScanResultCard({ result }: Props) {
 
         <div>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
-            Reasoning
+            What we found
           </h4>
           <p className="text-sm leading-relaxed text-foreground">{reasoning}</p>
         </div>

@@ -43,7 +43,7 @@ function recentVisuals(scan: Scan) {
       iconColor: "text-danger",
       summary:
         scan.result.flaggedAllergies.length > 0
-          ? `Avoid — ${scan.result.flaggedAllergies.join(", ")}`
+          ? `Avoid: ${scan.result.flaggedAllergies.join(", ")}`
           : "Flagged",
       fallbackTitle: "Flagged scan",
     };
@@ -53,7 +53,7 @@ function recentVisuals(scan: Scan) {
       iconBg: "bg-warning-soft",
       Icon: AlertCircle,
       iconColor: "text-warning",
-      summary: `Be aware — ${scan.result.flaggedIntolerances.join(", ")}`,
+      summary: `Be aware: ${scan.result.flaggedIntolerances.join(", ")}`,
       fallbackTitle: "Mild flag",
     };
   }

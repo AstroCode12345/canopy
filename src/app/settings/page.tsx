@@ -211,9 +211,8 @@ export default function SettingsPage() {
             </button>
           </div>
           <p className="mt-2.5 px-1 text-[12px] leading-snug text-faint">
-            Your allergens and scan history are saved to your account and
-            protected by database-level access rules — only you can ever
-            read or write your own data.
+            Your allergens and scans are saved to your account. Only you can
+            see them.
           </p>
         </section>
 

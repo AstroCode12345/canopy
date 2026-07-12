@@ -130,16 +130,18 @@ response turns that evidence into a verdict.
   "directMatches": [{ "allergen": "exact matching label from the user's list" }],
   "advisories": [{ "allergen": "exact matching label from the user's list", "phrase": "the source advisory text as read, e.g. may contain traces of peanuts" }],
   "readable": true only if the ingredients were clearly readable. If the image is blurry, cut off, or no ingredients are visible, this MUST be false and directMatches/advisories/ingredients MUST all be [],
-  "reasoning": "2-4 short sentences. Briefly explain what you found ingredient-by-ingredient. If nothing matched, you MUST include the phrase 'No allergens detected, but please double-check the physical label.' If anything matched, name which ingredient maps to which user sensitivity. If there are advisories, mention them too."
+  "reasoning": "1 to 2 short, plain sentences written straight to the person as 'you', never 'the user'. Do NOT walk through the ingredients one by one. If something matched, name it in a few words and why it is on their radar, e.g. 'This has almonds, which are on your avoid list.' If there is a real advisory, add a brief line, e.g. 'It also says it may contain traces of peanuts.' If nothing matched, reassure them and remind them labels change, e.g. 'Nothing on your list turned up here, but check the packaging yourself to be safe.' Sound like a careful friend, calm and human, not a clinical report."
 }
 
 directMatches vs advisories — these are TWO SEPARATE EVIDENCE CHANNELS, never combined by you. The test is WHERE on the label the word comes from, not just whether the word appears somewhere in the image:
 - "directMatches": the allergen is part of the product's actual ingredients — named directly INSIDE THE INGREDIENTS LIST (or equivalent enumeration of what the product is made of), as an alias/derivative, or via composite-food inference (see COMPOSITE FOODS below). One entry per allergen that matches this way.
-- "advisories": a SEPARATE cross-contact or precautionary SENTENCE about the allergen — "may contain traces of X", "manufactured in a facility that also processes X", "made on shared equipment with X" (in ANY language, e.g. French "Peut contenir..."), found anywhere on the packaging. One entry per such statement, with "phrase" as the source text.
+- "advisories": a SEPARATE sentence warning that the allergen MIGHT be present through cross-contact — "may contain traces of X", "manufactured in a facility that also processes X", "made on shared equipment with X" (in ANY language, e.g. French "Peut contenir..."), found anywhere on the packaging. One entry per such statement, with "phrase" as the source text. An advisory ALWAYS asserts possible presence or risk. A statement asserting ABSENCE is never an advisory (see POLARITY below).
 - CRITICAL: if an allergen's name appears ONLY inside an advisory sentence like "may contain traces of X" and NOWHERE in the actual ingredients enumeration, that is advisory-only evidence — X goes ONLY in "advisories", never in "directMatches", even though the word "X" is technically printed on the packaging. The advisory sentence is not part of the ingredients list; reading the word there is not the same as the ingredient being present. Do not let the mere presence of the allergen's name anywhere in the printed text put it into directMatches — check specifically whether it is inside the ingredients enumeration itself.
   Worked example: a label's ingredients list is "Oat flakes, honey, dried cranberries, sunflower seeds, cinnamon." followed by the separate sentence "May contain traces of peanuts and sesame." Peanuts and sesame do NOT appear in the ingredients list — they appear only inside the advisory sentence. Correct output: directMatches = [] (empty — peanuts/sesame are not ingredients of this product), advisories = [{"allergen":"Peanuts","phrase":"May contain traces of peanuts and sesame"}, {"allergen":"Sesame","phrase":"..."}], and the "ingredients" array should list oat flakes/honey/dried cranberries/sunflower seeds/cinnamon only — do NOT add "peanuts" or "sesame" to the ingredients array either, since they are not actually ingredients of this product.
 - If an allergen is both a real ingredient (appears in the ingredients enumeration) AND separately has an advisory sentence about it (unusual, but possible for e.g. "traces of egg" on a product that also lists egg directly), report it in BOTH arrays — each one independently, because each is independently true.
 - Whether an advisory-only allergen also becomes a "flag" is a decision made entirely outside your response; your only job is to correctly locate WHERE each allergen name came from.
+- POLARITY — read whether a statement asserts the allergen is PRESENT/at risk or ABSENT, do not just spot the allergen word near the word "facility". "Free from X", "does not contain X", "X-free", "made in a facility FREE FROM X", "no X", "suitable for people with X allergy" all assert the allergen is ABSENT. These are reassurances, the exact OPPOSITE of an advisory. NEVER put an absence or free-from statement into advisories or directMatches, and never surface it as a risk.
+  Worked counter-example: a label reads "Made in a dedicated peanut and tree nut free facility." This tells the user the facility is FREE FROM peanuts and tree nuts. Correct output for peanuts and tree nuts: they go in NEITHER array (advisories empty for them, directMatches empty for them). Flagging "tree nuts" here just because the words "tree nut" appear is exactly the mistake to avoid: the sentence says the product is SAFE from tree nuts, not at risk of them.
 
 COMPOSITE FOODS — distinguish these three cases precisely when deciding directMatches:
   1. REQUIRED inference: when the label prints the name of a food, dish, or preparation whose standard recipe ALWAYS contains an allergen, that allergen IS a directMatch even though the allergen word itself is not printed. "Marzipan" IS almonds (tree nuts). "Satay" is peanut-based. "Mayonnaise" contains egg. "Seitan" IS wheat gluten. "Brioche" contains wheat, butter (dairy), and egg. "Worcestershire sauce" contains anchovies (fish). Recognizing the known composition of a printed name is reading the label, not inventing.
@@ -232,6 +234,34 @@ function matchedAllergenEntries(
   return out;
 }
 
+/**
+ * Deterministic backstop for the free-from false positive (task 2026-07-08).
+ * The prompt tells the model that "free from X" / "X-free facility" statements
+ * are reassurances, not advisories — but the model still slips ~1 in 8, and a
+ * false cross-contact flag on a product a label calls SAFE is exactly the kind
+ * of thing that erodes trust. So we also enforce it in code.
+ *
+ * An advisory's `phrase` is kept only if it reads like a RISK statement. We
+ * drop it when it asserts ABSENCE and carries no risk language. The
+ * risk-marker check is deliberately first and permissive: a genuine advisory
+ * that happens to also say something is "X-free" (e.g. "may contain nuts;
+ * gluten free") keeps its risk marker and is never dropped. We only drop the
+ * pure-reassurance case, so this can never hide a real "may contain".
+ */
+function isFreeFromReassurance(phrase: string): boolean {
+  const p = phrase.toLowerCase();
+  const hasRiskMarker =
+    /may\s+contain|trace|shared|also\s+(process|handle|manufactur)|\bprocess(es|ed)?\b|\bhandles?\b|peut\s+contenir|puede\s+contener|kann\s+spuren/.test(
+      p,
+    );
+  if (hasRiskMarker) return false;
+  const assertsAbsence =
+    /free[-\s]?(from|of)\b|[a-z]+[-\s]free\b|free\s+facilit|does\s+not\s+contain|contains?\s+no\b|dedicated.*\bfree\b/.test(
+      p,
+    );
+  return assertsAbsence;
+}
+
 function extractJsonObject(rawText: string): unknown {
   const full = "{" + rawText;
   const start = full.indexOf("{");
@@ -313,6 +343,13 @@ export async function POST(request: Request) {
       ],
     });
 
+    const { input_tokens, output_tokens } = message.usage;
+    const inputCost = (input_tokens / 1_000_000) * 1.0;
+    const outputCost = (output_tokens / 1_000_000) * 5.0;
+    console.log(
+      `[/api/scan] usage: ${input_tokens} in + ${output_tokens} out = $${(inputCost + outputCost).toFixed(5)}`,
+    );
+
     const firstBlock = message.content[0];
     const rawText =
       firstBlock && firstBlock.type === "text" ? firstBlock.text : "";
@@ -355,6 +392,13 @@ export async function POST(request: Request) {
         continue;
       const matched = matchAllergenLabel(r.allergen, allergens);
       if (!matched) continue; // not one of the user's own allergens — drop
+      if (isFreeFromReassurance(r.phrase)) {
+        // Label says this allergen is ABSENT (free-from); not a risk.
+        console.warn(
+          `[/api/scan] dropped free-from reassurance mis-reported as advisory: "${r.phrase.trim()}"`,
+        );
+        continue;
+      }
       advisories.push({
         allergen: matched.label,
         severity: matched.severity,

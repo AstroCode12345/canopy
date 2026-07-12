@@ -32,16 +32,24 @@ interface Props {
 export function AllergenEditor({ selected, onChange }: Props) {
   const [customInput, setCustomInput] = useState("");
 
-  const find = (id: string) => selected.find((a) => a.id === id);
+  // Match on LABEL, not id. Allergen ids change: they're slugs when a chip is
+  // first tapped, but become database UUIDs once saved and reloaded. Label is
+  // the stable identity (the DB enforces one row per user per label), so
+  // keying on it keeps chips highlighted no matter where the data came from.
+  const norm = (s: string) => s.trim().toLowerCase();
+  const findByLabel = (label: string) =>
+    selected.find((a) => norm(a.label) === norm(label));
 
   const cycle = (id: string, label: string) => {
-    const existing = find(id);
+    const existing = findByLabel(label);
     const next = nextSeverity(existing?.severity);
     if (!next) {
-      onChange(selected.filter((a) => a.id !== id));
+      onChange(selected.filter((a) => norm(a.label) !== norm(label)));
     } else if (existing) {
       onChange(
-        selected.map((a) => (a.id === id ? { ...a, severity: next } : a)),
+        selected.map((a) =>
+          norm(a.label) === norm(label) ? { ...a, severity: next } : a,
+        ),
       );
     } else {
       onChange([...selected, { id, label, severity: next }]);
@@ -51,16 +59,21 @@ export function AllergenEditor({ selected, onChange }: Props) {
   const addCustom = () => {
     const label = customInput.trim();
     if (!label) return;
-    const id = `custom-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-    if (selected.some((a) => a.id === id)) {
+    if (findByLabel(label)) {
       setCustomInput("");
       return;
     }
+    const id = `custom-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     onChange([...selected, { id, label, severity: "allergy" }]);
     setCustomInput("");
   };
 
-  const customSelections = selected.filter((a) => a.id.startsWith("custom-"));
+  // A custom allergen is anything the user added that isn't one of the presets,
+  // decided by label so it survives the id changing across a save/reload.
+  const commonLabels = new Set(COMMON.map((c) => norm(c.label)));
+  const customSelections = selected.filter(
+    (a) => !commonLabels.has(norm(a.label)),
+  );
 
   return (
     <div className="space-y-6">
@@ -91,7 +104,7 @@ export function AllergenEditor({ selected, onChange }: Props) {
             <SeverityChip
               key={item.id}
               label={item.label}
-              severity={find(item.id)?.severity}
+              severity={findByLabel(item.label)?.severity}
               onClick={() => cycle(item.id, item.label)}
             />
           ))}
@@ -106,7 +119,7 @@ export function AllergenEditor({ selected, onChange }: Props) {
           <div className="flex flex-wrap gap-2">
             {customSelections.map((item) => (
               <SeverityChip
-                key={item.id}
+                key={item.label}
                 label={item.label}
                 severity={item.severity}
                 onClick={() => cycle(item.id, item.label)}
@@ -176,10 +189,10 @@ function SeverityChip({
 
   const ariaLabel =
     severity === "allergy"
-      ? `${label}, severe — tap to mark as mild`
+      ? `${label}, severe. Tap to mark as mild`
       : severity === "intolerance"
-        ? `${label}, mild — tap to remove`
-        : `${label}, off — tap to mark as severe`;
+        ? `${label}, mild. Tap to remove`
+        : `${label}, off. Tap to mark as severe`;
 
   return (
     <button

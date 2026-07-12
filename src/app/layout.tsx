@@ -14,7 +14,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Canopy — your allergen scanner",
+  title: "Canopy · Your allergen scanner",
   description:
     "Snap a photo of any food label. Canopy reads the ingredients and flags anything you're allergic or sensitive to.",
   appleWebApp: {

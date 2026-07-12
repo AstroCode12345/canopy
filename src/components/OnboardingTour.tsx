@@ -79,8 +79,8 @@ const STEPS: Step[] = [
       <>
         Pick your allergens or intolerances. Tag each one as{" "}
         <span className="font-semibold text-danger">severe</span> or{" "}
-        <span className="font-semibold text-warning">mild</span> — I’ll watch
-        for both in every scan.
+        <span className="font-semibold text-warning">mild</span>, and I’ll
+        watch for both in every scan.
       </>
     ),
     cta: "Next",
@@ -175,7 +175,7 @@ export function OnboardingTour({ onDone }: Props) {
         {!current.finalCta && (
           <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted">
             <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-            <span>No account needed. Everything stays on your phone.</span>
+            <span>Saved to your account. Only you can see it.</span>
           </div>
         )}
       </div>

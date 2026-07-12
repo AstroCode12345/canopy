@@ -116,16 +116,23 @@ function evaluate(c, status, json) {
           : ""),
     );
 
-  if (c.expectAdvisories) {
+  if (c.expectAdvisories || c.forbiddenAdvisories) {
     const advisoryAllergens = new Set(
       (Array.isArray(json.advisories) ? json.advisories : [])
         .map((a) => (a && typeof a.allergen === "string" ? norm(a.allergen) : null))
         .filter(Boolean),
     );
-    for (const a of c.expectAdvisories) {
+    for (const a of c.expectAdvisories ?? []) {
       if (!advisoryAllergens.has(norm(a)))
         problems.push(
           `expected "${a}" in advisories[] (H1 channel), got [${[...advisoryAllergens].join(", ")}]`,
+        );
+    }
+    // Free-from / absence statements (T21) must never appear as advisories.
+    for (const a of c.forbiddenAdvisories ?? []) {
+      if (advisoryAllergens.has(norm(a)))
+        problems.push(
+          `POLARITY REGRESSION: "${a}" appeared in advisories[] but the label asserts it is ABSENT (free-from)`,
         );
     }
   }
