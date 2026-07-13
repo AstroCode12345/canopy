@@ -16,14 +16,28 @@ capital and a legal team could eventually do.
 
 ## Near-term feature ideas
 
-### Barcode scanning
+### Barcode scanning (stage 1 built, 2026-07-12)
 A barcode is an exact product ID, so instead of guessing from a photo you
-look it up directly in a free food database like Open Food Facts (millions
-of products, real ingredient/allergen data, no API key needed). More
-reliable than vision-model OCR for identifying *which* product something is,
-and it's the same data plumbing the "recommend an alternative" idea below
-needs. Worth pairing with the eventual mobile wrap, since native camera APIs
-handle barcode detection better than a browser can.
+look it up directly in Open Food Facts (millions of products, real
+ingredient/allergen data, no API key needed).
+
+Shipped in stage 1: a Label/Barcode toggle on the scan screen, live detection
+from the camera feed (`barcode-detector` package: native API on Android,
+WASM on iPhone), a server route (`/api/barcode`) that queries OFF and derives
+the verdict from declared allergen and traces tags using the same
+profile-lookup rules as the label scan. Safety rule baked in: database tags
+can prove an allergen IS present, never that it's absent, so there is no
+green "safe" from a barcode alone. No-hit results say so honestly and hand
+off to the label scan.
+
+Remaining stages:
+- Stage 2: run OFF's ingredients text through the existing model matching
+  pipeline (aliases, composite foods) so a barcode alone can produce a real
+  verdict, still without needing a photo.
+- Stage 3: scanned-before cache keyed by barcode, so repeat products skip
+  the lookup and the model entirely.
+- Stage 4: recommend a comparable product without the allergen (needs OFF
+  category data).
 
 ### Ask about this scan
 After a result, let someone tap in and ask a follow-up in plain language:
