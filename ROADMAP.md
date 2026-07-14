@@ -87,6 +87,18 @@ deterministic and know nothing about aliases), the user can SEE what Canopy
 watches for and correct it, and the stored list feeds the translated
 allergen card. One call per allergen ever, roughly a cent, cached forever.
 
+## Supported scan languages (verified 2026-07-14)
+
+English, French, Japanese, Spanish, German, and Simplified Chinese, each
+with its own redteam fixture (T7, T14, T22, T23, T24 plus the English
+suite) measured at or near 100% on the day of verification. Support rests
+on three layers: the model's own multilingual reading, per-language
+allergen vocabulary in the scan prompt, and a deterministic
+translation-trap table in the server for words the model reliably gets
+wrong (German Vollei, Japanese 全粉乳, and friends). Other languages still
+work on a best-effort basis through the model; these six are the ones
+Canopy stands behind.
+
 ## One legitimate longer-range direction
 
 Scanning a food label is really one instance of a broader question: "is this

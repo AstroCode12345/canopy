@@ -33,10 +33,15 @@ for (const c of cases) {
     g.fillRect(48, 110, 804, 4);
     const hasCJK = (s) => /[　-鿿＀-￯]/.test(s);
     lines.forEach((ln, i) => {
-      // Arial has no CJK glyphs; fall back to a system CJK font per line.
-      // Keep CJK at regular weight 31px: bolder/larger renders made Haiku
-      // MORE likely to confuse 全粉乳 (milk powder) with 全粒粉 (whole wheat).
-      g.font = hasCJK(ln) ? '31px "Hiragino Sans"' : "31px Arial";
+      // Arial has no CJK glyphs; fall back to system CJK fonts per line.
+      // Hiragino Sans covers Japanese; Hiragino Sans GB fills the
+      // Simplified-Chinese-only characters it lacks (鸡, 盐, 坚 — these
+      // render as tofu boxes without it). Keep CJK at regular weight 31px:
+      // bolder/larger renders made Haiku MORE likely to confuse 全粉乳
+      // (milk powder) with 全粒粉 (whole wheat).
+      g.font = hasCJK(ln)
+        ? '31px "Hiragino Sans", "Hiragino Sans GB"'
+        : "31px Arial";
       g.fillText(ln, 48, 170 + i * 46);
     });
   }

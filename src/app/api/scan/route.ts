@@ -22,6 +22,10 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
     aliases: [
       "casein", "caseinate", "whey", "lactose", "lactalbumin", "ghee",
       "curds", "butter", "cream", "milk solids", "paneer", "kefir",
+      "乳", "牛乳", "乳成分", "脱脂粉乳",
+      "全粉乳 (whole MILK powder — do not confuse with 全粒粉, whole-wheat flour)",
+      "奶", "牛奶", "奶粉", "全脂奶粉 (Chinese: whole milk powder — dairy, not wheat)",
+      "Milch", "Molke (German: whey)", "lait", "leche", "mantequilla (Spanish: butter)",
     ],
     dishes: [
       "custard", "brioche (butter + milk)", "bechamel", "white chocolate",
@@ -32,7 +36,8 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
     group: "Eggs",
     aliases: [
       "albumin", "albumen", "ovalbumin", "ovomucoid", "lysozyme",
-      "meringue powder",
+      "meringue powder", "卵", "鶏卵", "卵白", "鸡蛋", "蛋",
+      "Vollei (German: whole egg — an egg product, not whey)", "Ei", "Eier", "oeuf", "huevo",
     ],
     dishes: [
       "mayonnaise", "aioli", "meringue", "royal icing", "hollandaise",
@@ -49,7 +54,7 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
   },
   {
     group: "Shellfish",
-    aliases: ["krill", "prawn", "shrimp", "langoustine", "scampi", "crab", "lobster"],
+    aliases: ["krill", "prawn", "shrimp", "langoustine", "scampi", "crab", "lobster", "えび", "かに", "虾", "蟹"],
     dishes: ["oyster sauce", "shrimp paste", "XO sauce", "bisque"],
   },
   {
@@ -57,6 +62,8 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
     aliases: [
       "almond", "hazelnut", "cashew", "pistachio", "walnut", "pecan",
       "macadamia", "brazil nut", "nut paste", "nut flour", "nut oil",
+      "アーモンド", "くるみ", "カシューナッツ", "坚果 (nuts)", "杏仁", "腰果", "核桃",
+      "Haselnüsse", "Mandeln", "fruits à coque (French: tree nuts, NOT fish or shellfish)", "frutos de cáscara (Spanish: tree nuts)",
     ],
     dishes: [
       "marzipan (almond)", "frangipane (almond)", "praline (hazelnut)",
@@ -66,7 +73,7 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
   },
   {
     group: "Peanuts",
-    aliases: ["groundnut", "arachis oil", "peanut flour", "monkey nuts"],
+    aliases: ["groundnut", "arachis oil", "peanut flour", "monkey nuts", "ピーナッツ", "落花生", "花生", "Erdnüsse", "arachide", "cacahuete"],
     dishes: [
       "satay (peanut-based)", "peanut stew / mafe", "kung pao",
       "bamba",
@@ -77,6 +84,8 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
     aliases: [
       "semolina", "spelt", "durum", "farro", "einkorn", "kamut", "bulgur",
       "couscous", "malt", "malt extract", "malt vinegar (barley)",
+      "小麦", "小麦粉", "面粉", "全粒粉 (whole-wheat flour — not 全粉乳/全脂奶粉, which are milk)",
+      "Weizenmehl", "farine de blé", "harina de trigo",
     ],
     dishes: [
       "seitan (pure wheat gluten)", "panko", "udon", "soy sauce (brewed with wheat)",
@@ -85,12 +94,12 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
   },
   {
     group: "Soy",
-    aliases: ["soya", "soy protein", "lecithin (E322)", "textured vegetable protein", "TVP"],
+    aliases: ["soya", "soy protein", "lecithin (E322)", "textured vegetable protein", "TVP", "大豆", "黄豆", "Soja", "Sojalecithin"],
     dishes: ["tofu", "tempeh", "edamame", "miso", "natto", "soy sauce", "tamari"],
   },
   {
     group: "Sesame",
-    aliases: ["benne", "sesame oil", "sesamol", "gomashio"],
+    aliases: ["benne", "sesame oil", "sesamol", "gomashio", "ごま", "胡麻", "芝麻", "Sesam", "sésamo"],
     dishes: ["tahini", "hummus (tahini)", "halva", "za'atar"],
   },
 ];
@@ -121,12 +130,19 @@ Analyze this food label image. The label may be written in ANY language (English
 ALLERGEN REFERENCE (examples of each pattern — not an exhaustive list; apply the same reasoning to items not listed here):
 ${renderAllergenReference()}
 
+TRANSLATION TRAPS — these exact words are frequently mistranslated. This table is authoritative; if your first-instinct translation of one of these words differs, the table wins:
+- German "Vollei" = whole EGG (an egg product). It is NEVER whey — whey in German is "Molke". "Vollei" on a label means the product contains egg.
+- Japanese 全粉乳 = whole MILK powder (dairy). 全粒粉 = whole-WHEAT flour (gluten). One character apart, completely different allergens.
+- Chinese 全脂奶粉 = whole MILK powder (dairy), never a wheat product.
+- French "fruits à coque" = TREE NUTS, never fish and never shellfish.
+- Spanish "frutos de cáscara" = TREE NUTS.
+
 Return ONLY this JSON object (no other text). Note what you are NOT asked for:
 there is no "flagged" or "safe-to-eat" field for you to decide — you report
 raw evidence only, in two separate channels, and something outside your
 response turns that evidence into a verdict.
 {
-  "ingredients": ["every ingredient you can read"],
+  "ingredients": ["every ingredient you can read. For labels not in English, write each entry as English followed by the original printed word in parentheses, e.g. 'Wheat flour (Weizenmehl)', 'Whole milk powder (全粉乳)', 'Whole egg (Vollei)' — always preserve the original printed word"],
   "directMatches": [{ "allergen": "exact matching label from the user's list", "source": "the printed text from the ingredients enumeration that justifies the match, copied as printed, e.g. 'HAZELNUTS 13%' or 'marzipan'" }],
   "advisories": [{ "allergen": "exact matching label from the user's list", "phrase": "the source advisory text as read, e.g. may contain traces of peanuts" }],
   "readable": true only if the ingredients were clearly readable. If the image is blurry, cut off, or no ingredients are visible, this MUST be false and directMatches/advisories/ingredients MUST all be [],
@@ -142,6 +158,7 @@ directMatches vs advisories — these are TWO SEPARATE EVIDENCE CHANNELS, never 
 - Whether an advisory-only allergen also becomes a "flag" is a decision made entirely outside your response; your only job is to correctly locate WHERE each allergen name came from.
 - POLARITY — read whether a statement asserts the allergen is PRESENT/at risk or ABSENT, do not just spot the allergen word near the word "facility". "Free from X", "does not contain X", "X-free", "made in a facility FREE FROM X", "no X", "suitable for people with X allergy" all assert the allergen is ABSENT. These are reassurances, the exact OPPOSITE of an advisory. NEVER put an absence or free-from statement into advisories or directMatches, and never surface it as a risk.
   Worked counter-example: a label reads "Made in a dedicated peanut and tree nut free facility." This tells the user the facility is FREE FROM peanuts and tree nuts. Correct output for peanuts and tree nuts: they go in NEITHER array (advisories empty for them, directMatches empty for them). Flagging "tree nuts" here just because the words "tree nut" appear is exactly the mistake to avoid: the sentence says the product is SAFE from tree nuts, not at risk of them.
+- DECLARED-ALLERGEN SUMMARIES: many labels print a mandatory summary DECLARING what the product contains, separate from the ingredients list, and these are directMatch evidence, not advisories. Japanese labels: （原材料の一部に乳成分・小麦を含む） means "part of the ingredients CONTAINS milk components and wheat" — 〜を含む asserts PRESENCE. Every allergen such a summary declares is a directMatch with that summary as its source; do NOT soften 含む into "may contain" and do NOT leave a declared allergen out of directMatches just because you could not spot it inside the ingredient enumeration itself (the summary exists precisely to declare it authoritatively). The same applies to English "Contains: milk, wheat" lines, Chinese 过敏原信息：含有小麦、乳制品 summaries, and EU labels that bold allergens. Cross-contact statements are different and stay advisories: Japanese cross-contact reads like 同じ製造ラインで／同じ工場で〜を含む製品を製造 ("made on a line / in a factory that also handles X").
 
 COMPOSITE FOODS — distinguish these three cases precisely when deciding directMatches:
   1. REQUIRED inference: when the label prints the name of a food, dish, or preparation whose standard recipe ALWAYS contains an allergen, that allergen IS a directMatch even though the allergen word itself is not printed (with the printed dish name as its "source" — needing to fill in source is never a reason to skip the inference). "Marzipan" IS almonds (tree nuts). "Satay" is peanut-based. "Mayonnaise" contains egg. "Seitan" IS wheat gluten. "Brioche" contains wheat, butter (dairy), and egg. "Worcestershire sauce" contains anchovies (fish). Recognizing the known composition of a printed name is reading the label, not inventing.
@@ -215,6 +232,49 @@ function matchAllergenLabel(
     s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).sort().join("|");
   const rawTokens = tokens(raw);
   return allergens.find((a) => tokens(a.label) === rawTokens);
+}
+
+/**
+ * Known mistranslation traps: foreign label terms Haiku reliably translates
+ * to the WRONG allergen even when the prompt corrects it ("Vollei" became
+ * "Whey" in 16 of 17 observed runs despite an explicit trap-table
+ * instruction, 2026-07-14). The ingredients array preserves original printed
+ * words in parentheses, so this deterministic sweep catches what the
+ * model's translation habit drops. Additive only: it can add a missed
+ * directMatch, never remove or downgrade one, so its worst failure mode is
+ * an extra warning, never a false "clear".
+ */
+const TRANSLATION_TRAPS: ReadonlyArray<{ term: string; allergenLabel: string }> = [
+  { term: "vollei", allergenLabel: "Eggs" },
+  // Dairy: compound/callout forms only. Deliberately NOT bare 乳 or 奶粉:
+  // 豆乳 (soy milk) and 豆奶粉 (soy milk powder) contain them and are
+  // dairy-free, so those would false-positive.
+  { term: "全粉乳", allergenLabel: "Dairy" },
+  { term: "乳成分", allergenLabel: "Dairy" },
+  { term: "全脂奶粉", allergenLabel: "Dairy" },
+  { term: "牛乳", allergenLabel: "Dairy" },
+  { term: "牛奶", allergenLabel: "Dairy" },
+  { term: "小麦", allergenLabel: "Gluten / Wheat" },
+  { term: "卵", allergenLabel: "Eggs" },
+  { term: "鸡蛋", allergenLabel: "Eggs" },
+  { term: "ピーナッツ", allergenLabel: "Peanuts" },
+  { term: "落花生", allergenLabel: "Peanuts" },
+  { term: "花生", allergenLabel: "Peanuts" },
+  { term: "大豆", allergenLabel: "Soy" },
+  { term: "黄豆", allergenLabel: "Soy" },
+  { term: "ごま", allergenLabel: "Sesame" },
+  { term: "胡麻", allergenLabel: "Sesame" },
+  { term: "芝麻", allergenLabel: "Sesame" },
+  { term: "fruits a coque", allergenLabel: "Tree nuts" },
+  { term: "frutos de cascara", allergenLabel: "Tree nuts" },
+];
+
+/** Lowercase + strip accents so "à coque"/"cáscara" compare predictably. */
+function normalizeForTrap(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
 }
 
 /** Loose word tokens for the evidence checks below. */
@@ -326,7 +386,7 @@ function matchedDirectEntries(
  * a directMatch source means the match belongs in the advisories channel).
  */
 function looksLikeRiskStatement(phrase: string): boolean {
-  return /may\s+contain|trace|shared|also\s+(process|handle|manufactur)|\bprocess(es|ed)?\b|\bhandles?\b|peut\s+contenir|puede\s+contener|kann\s+spuren/.test(
+  return /may\s+contain|trace|shared|also\s+(process|handle|manufactur)|\bprocess(es|ed)?\b|\bhandles?\b|peut\s+contenir|puede\s+contener|kann\s+spuren|可能含有|混入/.test(
     phrase.toLowerCase(),
   );
 }
@@ -462,6 +522,28 @@ export async function POST(request: Request) {
       allergens,
       parsed.ingredients,
     );
+
+    // Deterministic reconciliation for known mistranslation traps (see
+    // TRANSLATION_TRAPS): the ingredients array preserves original printed
+    // words, so a trap term appearing in a genuine ingredient entry adds
+    // its allergen to the direct channel if the model's translation dropped
+    // it. Entries that read like advisories or free-from statements are
+    // skipped: a trap word inside "may contain..." belongs to the advisory
+    // channel and one inside "free from..." belongs nowhere.
+    for (const entry of parsed.ingredients) {
+      if (looksLikeRiskStatement(entry) || isFreeFromReassurance(entry)) continue;
+      const entryNorm = normalizeForTrap(entry);
+      for (const trap of TRANSLATION_TRAPS) {
+        if (!entryNorm.includes(normalizeForTrap(trap.term))) continue;
+        const onProfile = matchAllergenLabel(trap.allergenLabel, allergens);
+        if (!onProfile) continue;
+        if (directAllergens.some((a) => a.label === onProfile.label)) continue;
+        console.warn(
+          `[/api/scan] reconciliation: added ${onProfile.label} from trap term "${trap.term}" in ingredient "${entry}"`,
+        );
+        directAllergens.push(onProfile);
+      }
+    }
 
     const advisories: Advisory[] = [];
     for (const raw of parsed.advisories) {

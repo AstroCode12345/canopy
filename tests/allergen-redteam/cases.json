@@ -240,7 +240,7 @@
       "forbidden": [],
       "warnIfFlagged": [],
       "auditBaseline": "PASS",
-      "notes": "2026-07-02: fixture evolved (added the mandatory JP allergen callout line; more realistic). KNOWN OPEN DEFECT, expect intermittent Dairy failures (~1 in 3): Haiku sometimes OCR-confuses 全粉乳 (milk powder) with 全粒粉 (whole wheat), AND separately sometimes acknowledges 乳成分 (milk components) in its reasoning while omitting Dairy from the flagged arrays. That reasoning/array inconsistency is a real false negative to be fixed by server-side reconciliation (H2 session) or a prompt consistency rule. Do not relax this fixture to make the suite green. Also exposed live T19 label drift ('Wheat / Gluten' vs profile 'Gluten / Wheat'), scored as WARN. RATE DRIFT 2026-07-14: measured 8/8 FAIL on the pre-source-veto prompt and 6/8 FAIL on the current prompt, same day (was ~1 in 3 on 2026-07-09) — the Dairy miss is model-side OCR drift on this label, NOT caused by the directMatches source veto (A/B tested both prompts back to back; zero veto log lines during failures, the model simply never reports Dairy). Needs its own workstream: JP-label prompt hint or image preprocessing."
+      "notes": "2026-07-02: fixture evolved (added the mandatory JP allergen callout line; more realistic). KNOWN OPEN DEFECT, expect intermittent Dairy failures (~1 in 3): Haiku sometimes OCR-confuses 全粉乳 (milk powder) with 全粒粉 (whole wheat), AND separately sometimes acknowledges 乳成分 (milk components) in its reasoning while omitting Dairy from the flagged arrays. That reasoning/array inconsistency is a real false negative to be fixed by server-side reconciliation (H2 session) or a prompt consistency rule. Do not relax this fixture to make the suite green. Also exposed live T19 label drift ('Wheat / Gluten' vs profile 'Gluten / Wheat'), scored as WARN. RATE DRIFT 2026-07-14: measured 8/8 FAIL on the pre-source-veto prompt and 6/8 FAIL on the current prompt, same day (was ~1 in 3 on 2026-07-09) — the Dairy miss is model-side OCR drift on this label, NOT caused by the directMatches source veto (A/B tested both prompts back to back; zero veto log lines during failures, the model simply never reports Dairy). FIXED 2026-07-14 (same day, dedicated workstream): raw-response capture showed two simultaneous failures every run — 全粉乳 (whole milk powder) consistently OCR'd as 'whole wheat flour' (全粒粉), AND the mandatory （原材料の一部に乳成分・小麦を含む） callout being read but softened into a 'may contain' aside mentioned only in reasoning. Fix: Japanese allergen vocabulary added to ALLERGEN_REFERENCE (with the 全粉乳 vs 全粒粉 trap called out explicitly) plus a DECLARED-ALLERGEN SUMMARIES rule making contains-declarations directMatch evidence. Measured 7/10 FAIL before -> 10/10 PASS after; raw response confirms 'Whole milk powder' now read correctly; T7 (12 runs, fails only with its documented pre-existing signature) and T4 (6/6) show no collateral; full suite 16/0 green."
     },
     {
       "id": "T15",
@@ -277,6 +277,91 @@
       "expectStatus": "clear",
       "auditBaseline": "FAIL-FIXED",
       "notes": "2026-07-08 regression guard for a live false positive found on the deployed app: a fig/blueberry bar label reading 'Made in a dedicated peanut and tree nut FREE facility' was flagged as a Tree nuts cross-contact advisory (and merged into the severe flag with mayContain on). The model was spotting the words 'tree nut' next to 'facility' without reading the POLARITY of the sentence (free-FROM = absence = reassurance, the opposite of 'may contain'). None of this label's real ingredients are on the profile, so the correct verdict is clean. forbidden asserts nothing flags; forbiddenAdvisories asserts the free-from allergens never even enter the advisories channel. Fixed via the POLARITY rule + worked counter-example in buildUserPrompt() plus the isFreeFromReassurance() advisory backstop. RECURRENCE 2026-07-14: the same product flagged Tree nuts again on the deployed app, this time via directMatches with advisories empty, bypassing the advisories-only backstop. Second fix: directMatches must cite 'source' (the printed ingredient text) and matchedDirectEntries() vetoes sources that are free-from statements or bare allergen echoes with no ingredient support. The forbidden list catches this failure mode regardless of channel; verified 20/20 clean post-fix."
+    },
+    {
+      "id": "T22",
+      "title": "Spanish label: butter/leche, huevo, soja + trace advisory (frutos de cascara)",
+      "kind": "live",
+      "labelLines": [
+        "Harina de trigo, azúcar, mantequilla",
+        "(leche), huevo, lecitina de soja, sal.",
+        "Puede contener trazas de cacahuetes",
+        "y frutos de cáscara."
+      ],
+      "mayContain": true,
+      "required": [
+        "Gluten / Wheat",
+        "Dairy",
+        "Eggs",
+        "Soy"
+      ],
+      "forbidden": [
+        "Fish"
+      ],
+      "expectAdvisories": [
+        "Peanuts",
+        "Tree nuts"
+      ],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "Added 2026-07-14 (supported-languages verification): Spanish coverage. Measured 12/12 PASS on day one (8 pre-vocab + 4 post). 'frutos de cáscara' is EU-Spanish for tree nuts (meaning-level match, no cognate); 'Puede contener trazas' must land in the advisories channel (the phrase is already in looksLikeRiskStatement). Butter declared as mantequilla (leche) tests the alias path in Spanish."
+    },
+    {
+      "id": "T23",
+      "title": "German label: Haselnuesse, Butter/Milch, Vollei + Kann Spuren advisory",
+      "kind": "live",
+      "labelLines": [
+        "Weizenmehl, Zucker, Haselnüsse (12%),",
+        "Butter (Milch), Vollei, Sojalecithin,",
+        "Salz. Kann Spuren von Erdnüssen und",
+        "Sesam enthalten."
+      ],
+      "mayContain": true,
+      "required": [
+        "Gluten / Wheat",
+        "Tree nuts",
+        "Dairy",
+        "Eggs",
+        "Soy"
+      ],
+      "forbidden": [
+        "Fish"
+      ],
+      "expectAdvisories": [
+        "Peanuts",
+        "Sesame"
+      ],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "Added 2026-07-14 (supported-languages verification): German coverage. Day-one finding: Haiku translated Vollei (whole egg) as 'Whey' in 16/17 runs and DEFIED both an alias hint and a dedicated translation-trap prompt table (0/8, 0/8, 1/8 across three attempts). Fixed deterministically: the ingredients array now preserves original printed words in parentheses and the TRANSLATION_TRAPS sweep in route.ts adds the missed allergen from the original term (additive-only). 12/12 PASS after. Vollei (whole egg) and Weizenmehl test non-cognate German ingredient names; 'Kann Spuren ... enthalten' is the German trace advisory already covered by looksLikeRiskStatement."
+    },
+    {
+      "id": "T24",
+      "title": "Chinese label: whole milk powder, peanuts, egg + trace advisory",
+      "kind": "live",
+      "labelLines": [
+        "配料：小麦粉、白砂糖、花生、",
+        "全脂奶粉、鸡蛋、大豆磷脂、食用盐。",
+        "可能含有微量芝麻及坚果。"
+      ],
+      "mayContain": true,
+      "required": [
+        "Gluten / Wheat",
+        "Peanuts",
+        "Dairy",
+        "Eggs",
+        "Soy"
+      ],
+      "forbidden": [
+        "Fish"
+      ],
+      "expectAdvisories": [
+        "Sesame",
+        "Tree nuts"
+      ],
+      "warnIfFlagged": [],
+      "auditBaseline": "PASS",
+      "notes": "Added 2026-07-14 (supported-languages verification): Simplified Chinese coverage, the T14 lesson applied proactively. Measured 12/12 PASS on day one. Rendering needs the Hiragino Sans GB fallback (registered automatically; PingFang is absent on this machine and simplified-only glyphs like 鸡/盐/坚 otherwise render as tofu boxes). 全脂奶粉 (whole milk powder) is the zh analog of the 全粉乳 trap; 可能含有微量 ('may contain traces') must stay in the advisories channel. Requires the PingFang SC font fallback in gen-images.mjs (Hiragino lacks 奶/磷 glyphs)."
     },
     {
       "id": "T16",
