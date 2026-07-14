@@ -111,27 +111,12 @@ export function AllergenEditor({ selected, onChange }: Props) {
         </div>
       </div>
 
-      {customSelections.length > 0 && (
-        <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
-            Your additions
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {customSelections.map((item) => (
-              <SeverityChip
-                key={item.label}
-                label={item.label}
-                severity={item.severity}
-                onClick={() => cycle(item.id, item.label)}
-              />
-            ))}
-          </div>
-          <p className="mt-2 text-[11px] text-muted">
-            Tap past Mild to remove a custom allergen.
-          </p>
-        </div>
-      )}
-
+      {/* "Add your own" sits ABOVE the added chips on purpose: when someone
+          types an allergen and taps +, the new chip must appear directly
+          below the input, where they're already looking. With the sections
+          the other way around, the chip appeared off-screen above the fold
+          on phones and the add looked like it silently did nothing (bug
+          report 2026-07-13). */}
       <div>
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
           Add your own
@@ -160,6 +145,24 @@ export function AllergenEditor({ selected, onChange }: Props) {
             <Plus className="h-4 w-4" />
           </button>
         </div>
+
+        {customSelections.length > 0 && (
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-2">
+              {customSelections.map((item) => (
+                <SeverityChip
+                  key={item.label}
+                  label={item.label}
+                  severity={item.severity}
+                  onClick={() => cycle(item.id, item.label)}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-muted">
+              Tap a chip past Mild to remove it.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

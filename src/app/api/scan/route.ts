@@ -127,14 +127,14 @@ raw evidence only, in two separate channels, and something outside your
 response turns that evidence into a verdict.
 {
   "ingredients": ["every ingredient you can read"],
-  "directMatches": [{ "allergen": "exact matching label from the user's list" }],
+  "directMatches": [{ "allergen": "exact matching label from the user's list", "source": "the printed text from the ingredients enumeration that justifies the match, copied as printed, e.g. 'HAZELNUTS 13%' or 'marzipan'" }],
   "advisories": [{ "allergen": "exact matching label from the user's list", "phrase": "the source advisory text as read, e.g. may contain traces of peanuts" }],
   "readable": true only if the ingredients were clearly readable. If the image is blurry, cut off, or no ingredients are visible, this MUST be false and directMatches/advisories/ingredients MUST all be [],
   "reasoning": "1 to 2 short, plain sentences written straight to the person as 'you', never 'the user'. Do NOT walk through the ingredients one by one. If something matched, name it in a few words and why it is on their radar, e.g. 'This has almonds, which are on your avoid list.' If there is a real advisory, add a brief line, e.g. 'It also says it may contain traces of peanuts.' If nothing matched, reassure them and remind them labels change, e.g. 'Nothing on your list turned up here, but check the packaging yourself to be safe.' Sound like a careful friend, calm and human, not a clinical report."
 }
 
 directMatches vs advisories — these are TWO SEPARATE EVIDENCE CHANNELS, never combined by you. The test is WHERE on the label the word comes from, not just whether the word appears somewhere in the image:
-- "directMatches": the allergen is part of the product's actual ingredients — named directly INSIDE THE INGREDIENTS LIST (or equivalent enumeration of what the product is made of), as an alias/derivative, or via composite-food inference (see COMPOSITE FOODS below). One entry per allergen that matches this way.
+- "directMatches": the allergen is part of the product's actual ingredients — named directly INSIDE THE INGREDIENTS LIST (or equivalent enumeration of what the product is made of), as an alias/derivative, or via composite-food inference (see COMPOSITE FOODS below). One entry per allergen that matches this way. Every entry MUST include "source": the printed words from the ingredients enumeration that justify the match — the ingredient itself ("HAZELNUTS 13%") or the printed dish name for composite inference ("marzipan"). For composite-food inference the source IS the printed dish name, copied as printed: source "satay seasoning" justifies Peanuts, source "brioche" justifies Eggs/Dairy/Gluten, source "marzipan" justifies Tree nuts — citing the dish name is a complete, valid source. If the label is in another language or hard to read and you cannot quote the print exactly, use the closest ingredient as you wrote it in the "ingredients" array. The source field must NEVER stop you from reporting a real match: it does not raise the bar for what counts as a match, it only records where the match came from, and a match you are confident in with an imperfect source is always better than a missing match. A source is never an advisory sentence and never a free-from statement: if the only text you could cite for an allergen is a free-from or absence statement, that allergen belongs in NEITHER array.
 - "advisories": a SEPARATE sentence warning that the allergen MIGHT be present through cross-contact — "may contain traces of X", "manufactured in a facility that also processes X", "made on shared equipment with X" (in ANY language, e.g. French "Peut contenir..."), found anywhere on the packaging. One entry per such statement, with "phrase" as the source text. An advisory ALWAYS asserts possible presence or risk. A statement asserting ABSENCE is never an advisory (see POLARITY below).
 - CRITICAL: if an allergen's name appears ONLY inside an advisory sentence like "may contain traces of X" and NOWHERE in the actual ingredients enumeration, that is advisory-only evidence — X goes ONLY in "advisories", never in "directMatches", even though the word "X" is technically printed on the packaging. The advisory sentence is not part of the ingredients list; reading the word there is not the same as the ingredient being present. Do not let the mere presence of the allergen's name anywhere in the printed text put it into directMatches — check specifically whether it is inside the ingredients enumeration itself.
   Worked example: a label's ingredients list is "Oat flakes, honey, dried cranberries, sunflower seeds, cinnamon." followed by the separate sentence "May contain traces of peanuts and sesame." Peanuts and sesame do NOT appear in the ingredients list — they appear only inside the advisory sentence. Correct output: directMatches = [] (empty — peanuts/sesame are not ingredients of this product), advisories = [{"allergen":"Peanuts","phrase":"May contain traces of peanuts and sesame"}, {"allergen":"Sesame","phrase":"..."}], and the "ingredients" array should list oat flakes/honey/dried cranberries/sunflower seeds/cinnamon only — do NOT add "peanuts" or "sesame" to the ingredients array either, since they are not actually ingredients of this product.
@@ -144,7 +144,7 @@ directMatches vs advisories — these are TWO SEPARATE EVIDENCE CHANNELS, never 
   Worked counter-example: a label reads "Made in a dedicated peanut and tree nut free facility." This tells the user the facility is FREE FROM peanuts and tree nuts. Correct output for peanuts and tree nuts: they go in NEITHER array (advisories empty for them, directMatches empty for them). Flagging "tree nuts" here just because the words "tree nut" appear is exactly the mistake to avoid: the sentence says the product is SAFE from tree nuts, not at risk of them.
 
 COMPOSITE FOODS — distinguish these three cases precisely when deciding directMatches:
-  1. REQUIRED inference: when the label prints the name of a food, dish, or preparation whose standard recipe ALWAYS contains an allergen, that allergen IS a directMatch even though the allergen word itself is not printed. "Marzipan" IS almonds (tree nuts). "Satay" is peanut-based. "Mayonnaise" contains egg. "Seitan" IS wheat gluten. "Brioche" contains wheat, butter (dairy), and egg. "Worcestershire sauce" contains anchovies (fish). Recognizing the known composition of a printed name is reading the label, not inventing.
+  1. REQUIRED inference: when the label prints the name of a food, dish, or preparation whose standard recipe ALWAYS contains an allergen, that allergen IS a directMatch even though the allergen word itself is not printed (with the printed dish name as its "source" — needing to fill in source is never a reason to skip the inference). "Marzipan" IS almonds (tree nuts). "Satay" is peanut-based. "Mayonnaise" contains egg. "Seitan" IS wheat gluten. "Brioche" contains wheat, butter (dairy), and egg. "Worcestershire sauce" contains anchovies (fish). Recognizing the known composition of a printed name is reading the label, not inventing.
   2. FORBIDDEN invention: never report a directMatch for an ingredient that is neither printed on the label nor entailed by a printed name. Do not report dairy on a dark chocolate just because chocolate products often contain milk. Never guess at text you cannot actually read in the image.
   3. UNCERTAIN composition: if a printed name only SOMETIMES contains an allergen (for example "nougat" may contain egg white, "curry paste" may contain shellfish), do not silently clear it: if the allergen is on the user's SEVERE list and the food usually contains it, report it as a directMatch; otherwise state the possibility explicitly in reasoning (do not fabricate an advisory statement that wasn't actually printed).
 
@@ -217,21 +217,91 @@ function matchAllergenLabel(
   return allergens.find((a) => tokens(a.label) === rawTokens);
 }
 
-/** Extracts { allergen: string } entries from a raw model array, matched
- * against the profile. Shared by directMatches and advisories parsing. */
-function matchedAllergenEntries(
+/** Loose word tokens for the evidence checks below. */
+function tokensOf(s: string): string[] {
+  return s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+/** Singular/plural-tolerant token comparison ("nut" matches "nuts"). */
+function tokenMatches(a: string, b: string): boolean {
+  return a.startsWith(b) || b.startsWith(a);
+}
+
+/**
+ * Extracts directMatches entries, matched against the profile, with two
+ * deterministic vetoes on the model's own cited evidence (audit fix
+ * 2026-07-13). Both vetoes only ever REMOVE a flag the model claimed; they
+ * can never add one, and an entry with no source at all is KEPT — when the
+ * evidence can't be inspected we stay on the cautious side.
+ *
+ * Why this exists: after the advisories channel got its free-from backstop,
+ * the same live false positive came back through THIS channel — the model
+ * put the "tree nut free facility" allergen straight into directMatches,
+ * which carried no evidence text to check. So now it must cite its source,
+ * and the server vetoes:
+ *   1. a source that is itself a free-from/absence statement;
+ *   2. a bare echo — the source is just the allergen's own name and no
+ *      detected ingredient supports it, the signature of the model quoting
+ *      the allergen word from somewhere outside the ingredients list.
+ */
+function matchedDirectEntries(
   raw: unknown[],
   allergens: Allergen[],
-): Allergen[] {
-  const out: Allergen[] = [];
+  ingredients: string[],
+): { direct: Allergen[]; rechanneled: Advisory[] } {
+  const ingredientTokens = ingredients.flatMap(tokensOf);
+  const direct: Allergen[] = [];
+  const rechanneled: Advisory[] = [];
   for (const item of raw) {
     if (typeof item !== "object" || item === null) continue;
     const r = item as Record<string, unknown>;
     if (typeof r.allergen !== "string") continue;
     const matched = matchAllergenLabel(r.allergen, allergens);
-    if (matched) out.push(matched);
+    if (!matched) continue;
+
+    const source = typeof r.source === "string" ? r.source.trim() : "";
+    if (source) {
+      if (isFreeFromReassurance(source)) {
+        console.warn(
+          `[/api/scan] dropped directMatch citing a free-from statement: "${source}" (${matched.label})`,
+        );
+        continue;
+      }
+      // A risk sentence cited as a direct source means the model misfiled a
+      // cross-contact advisory into the ingredients channel. Reroute instead
+      // of trusting or dropping: as an advisory it still warns, but the
+      // flagMayContain setting governs it the way the user chose (the T10
+      // leak: with the toggle OFF, a misfiled "may contain sesame" was
+      // flagging unconditionally because directs always flag).
+      if (looksLikeRiskStatement(source)) {
+        console.warn(
+          `[/api/scan] rechanneled directMatch citing a risk statement into advisories: "${source}" (${matched.label})`,
+        );
+        rechanneled.push({
+          allergen: matched.label,
+          severity: matched.severity,
+          phrase: source,
+        });
+        continue;
+      }
+      const srcTokens = tokensOf(source);
+      const labelTokens = tokensOf(matched.label);
+      const isBareEcho =
+        srcTokens.length > 0 &&
+        srcTokens.every((t) => labelTokens.some((lt) => tokenMatches(t, lt))) &&
+        !srcTokens.some((t) =>
+          ingredientTokens.some((ing) => tokenMatches(t, ing)),
+        );
+      if (isBareEcho) {
+        console.warn(
+          `[/api/scan] dropped directMatch with no ingredient support: "${source}" (${matched.label})`,
+        );
+        continue;
+      }
+    }
+    direct.push(matched);
   }
-  return out;
+  return { direct, rechanneled };
 }
 
 /**
@@ -248,16 +318,24 @@ function matchedAllergenEntries(
  * gluten free") keeps its risk marker and is never dropped. We only drop the
  * pure-reassurance case, so this can never hide a real "may contain".
  */
+/**
+ * True when a phrase reads like a cross-contact RISK statement ("may
+ * contain", "traces of", "shared equipment", in several languages). Shared
+ * by isFreeFromReassurance (risk language means it's a genuine advisory,
+ * never a reassurance) and by matchedDirectEntries (risk language cited as
+ * a directMatch source means the match belongs in the advisories channel).
+ */
+function looksLikeRiskStatement(phrase: string): boolean {
+  return /may\s+contain|trace|shared|also\s+(process|handle|manufactur)|\bprocess(es|ed)?\b|\bhandles?\b|peut\s+contenir|puede\s+contener|kann\s+spuren/.test(
+    phrase.toLowerCase(),
+  );
+}
+
 function isFreeFromReassurance(phrase: string): boolean {
-  const p = phrase.toLowerCase();
-  const hasRiskMarker =
-    /may\s+contain|trace|shared|also\s+(process|handle|manufactur)|\bprocess(es|ed)?\b|\bhandles?\b|peut\s+contenir|puede\s+contener|kann\s+spuren/.test(
-      p,
-    );
-  if (hasRiskMarker) return false;
+  if (looksLikeRiskStatement(phrase)) return false;
   const assertsAbsence =
     /free[-\s]?(from|of)\b|[a-z]+[-\s]free\b|free\s+facilit|does\s+not\s+contain|contains?\s+no\b|dedicated.*\bfree\b/.test(
-      p,
+      phrase.toLowerCase(),
     );
   return assertsAbsence;
 }
@@ -379,9 +457,10 @@ export async function POST(request: Request) {
     // cannot route an advisory-only allergen into the flagged arrays no
     // matter how it interprets "be conservative" — that decision, and the
     // severity tier itself, come only from OUR profile lookup here.
-    const directAllergens = matchedAllergenEntries(
+    const { direct: directAllergens, rechanneled } = matchedDirectEntries(
       parsed.directMatches,
       allergens,
+      parsed.ingredients,
     );
 
     const advisories: Advisory[] = [];
@@ -404,6 +483,15 @@ export async function POST(request: Request) {
         severity: matched.severity,
         phrase: r.phrase.trim(),
       });
+    }
+
+    // Advisories the model misfiled as direct matches (risk sentence cited
+    // as source) rejoin the advisory channel here, deduped against ones the
+    // model also reported normally.
+    for (const adv of rechanneled) {
+      if (!advisories.some((a) => a.allergen === adv.allergen)) {
+        advisories.push(adv);
+      }
     }
 
     const flaggedAllergies = [

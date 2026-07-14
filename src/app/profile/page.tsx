@@ -75,16 +75,21 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Sticky save bar — sits above the BottomNav */}
+      {/* Sticky save bar, sits above the BottomNav. pointer-events-none on
+          the wrapper matters: this is a full-width fixed overlay, and its
+          transparent gradient padding was swallowing taps meant for content
+          underneath it (like the add-allergen button when the phone keyboard
+          pushes this bar up the screen). Only the button itself should be
+          tappable. */}
       <div
-        className="fixed inset-x-0 z-10 px-6 pb-3 pt-6 bg-gradient-to-t from-background via-background to-transparent"
+        className="pointer-events-none fixed inset-x-0 z-10 px-6 pb-3 pt-6 bg-gradient-to-t from-background via-background to-transparent"
         style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
       >
         <button
           type="button"
           onClick={handleSave}
           disabled={!hydrated || saving}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-base font-semibold text-white shadow-soft transition-opacity disabled:opacity-40"
+          className="pointer-events-auto flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-base font-semibold text-white shadow-soft transition-opacity disabled:opacity-40"
         >
           {savedFlash ? (
             <>

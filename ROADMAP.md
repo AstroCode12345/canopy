@@ -70,21 +70,41 @@ barcode scanning would use), not the model's general knowledge: asking an
 LLM to invent "a nut-free granola brand" risks recommending something that
 doesn't exist, isn't sold nearby, or isn't actually safe anymore.
 
-### Printable / shareable allergen card, in multiple languages
+### Printable / shareable allergen card, in multiple languages (next up)
 A summary of someone's allergen list formatted to hand to a waiter, a school
 nurse, a host, or to carry while traveling abroad, translated. Low effort
 since the data already exists, real utility for the exact people this app is
-for.
+for. Greenlit 2026-07-13 as the next build after barcode stage 1.
+
+### AI alias expansion for custom allergens (Taymour's idea, 2026-07-13)
+When someone adds a custom allergen ("Mustard"), make one model call at
+add time asking for its families, aliases, and derivative names ("dijon,
+mustard seed, mustard flour, sinapis"), store them on the allergen row, and
+feed them into the scan prompt and the barcode tag matching. The scan model
+already alias-matches by meaning at scan time, so the win here is threefold:
+custom allergens get first-class treatment in barcode lookups (which are
+deterministic and know nothing about aliases), the user can SEE what Canopy
+watches for and correct it, and the stored list feeds the translated
+allergen card. One call per allergen ever, roughly a cent, cached forever.
 
 ## One legitimate longer-range direction
 
 Scanning a food label is really one instance of a broader question: "is this
 compatible with what I can or can't have." That question doesn't stop at
-allergies. Halal, kosher, vegan, and celiac-safe checking are the same
-underlying mechanic (a restriction list checked against ingredients) with
-different vocabularies. If this project ever has a reason to grow past
-allergies specifically, that's the direction that's actually adjacent to what
-already exists, not a new product.
+allergies. Halal (no alcohol, no pork, no non-halal gelatin), kosher, vegan,
+and vegetarian checking are the same underlying mechanic (a restriction list
+checked against ingredients) with different vocabularies. Taymour flagged
+this for real consideration on 2026-07-13. Design note for when it happens:
+these are restriction PROFILES (one toggle enables a whole vocabulary), not
+individual allergen chips, and the verdict language changes ("not halal"
+rather than "allergen flagged"), so it deserves its own section in the
+profile UI and its own reference table in the scan prompt rather than being
+stuffed into the allergens list.
+
+A visual redesign is also on Taymour's mind (flagged 2026-07-13, direction
+TBD). Any restyle should run the design-pass skill first and keep the
+result-card information hierarchy intact, since its severity tiers are part
+of the safety design, not just styling.
 
 ## Deliberately not planning, and why
 
