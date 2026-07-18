@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { AllergenEditor } from "@/components/AllergenEditor";
@@ -72,6 +73,17 @@ export default function ProfilePage() {
 
         {hydrated && (
           <AllergenEditor selected={allergens} onChange={setAllergens} />
+        )}
+
+        {hydrated && allergens.length > 0 && (
+          <div className="pt-6 text-center">
+            <Link
+              href="/card"
+              className="text-sm font-semibold text-accent hover:underline"
+            >
+              Get a printable allergen card
+            </Link>
+          </div>
         )}
       </main>
 

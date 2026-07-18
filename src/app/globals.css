@@ -112,3 +112,26 @@ body {
   );
   background-size: 26px 26px;
 }
+
+/* Print isolation for the allergen card (src/app/card/page.tsx): hide
+   everything on the page except the card itself, so what comes out of the
+   printer is just the card, not the app chrome around it. Standard
+   visibility-swap trick — display:none would work too, but visibility
+   preserves layout so the isolated element doesn't reflow at print time. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #allergen-card-print,
+  #allergen-card-print * {
+    visibility: visible;
+  }
+  #allergen-card-print {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
