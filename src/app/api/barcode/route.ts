@@ -4,6 +4,7 @@ import {
   type BarcodeLookupResult,
   type OffProduct,
 } from "@/lib/barcode";
+import { requireSessionInProduction } from "@/lib/apiAuth";
 import type { Allergen } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -34,6 +35,9 @@ interface RequestBody {
 }
 
 export async function POST(request: Request) {
+  const blocked = await requireSessionInProduction();
+  if (blocked) return blocked;
+
   let body: RequestBody;
   try {
     body = (await request.json()) as RequestBody;

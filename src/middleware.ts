@@ -13,10 +13,14 @@ export const config = {
   //   _next/static, _next/image  : Next.js build assets
   //   favicon, icon, apple-icon,
   //   manifest.webmanifest       : PWA metadata files, must stay public
-  //   api/                       : API routes manage auth themselves. /api/scan
-  //                                stays open for now so the red-team harness
-  //                                keeps working; it gets per-user auth in the
-  //                                storage-swap pass.
+  //   api/                       : API routes manage their own auth (see
+  //                                requireSessionInProduction() in
+  //                                src/lib/apiAuth.ts) rather than going
+  //                                through middleware, specifically so the
+  //                                red-team harness can keep calling
+  //                                /api/scan unauthenticated against a
+  //                                local dev server. The guard itself is a
+  //                                production-only no-op in dev.
   //   image files                : static assets
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.webmanifest|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",

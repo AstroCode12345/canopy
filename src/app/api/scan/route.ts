@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { requireSessionInProduction } from "@/lib/apiAuth";
 import type { Advisory, Allergen, ScanResult, ScanStatus } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -411,6 +412,9 @@ function extractJsonObject(rawText: string): unknown {
 }
 
 export async function POST(request: Request) {
+  const blocked = await requireSessionInProduction();
+  if (blocked) return blocked;
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       {
