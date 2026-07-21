@@ -27,6 +27,7 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
       "全粉乳 (whole MILK powder — do not confuse with 全粒粉, whole-wheat flour)",
       "奶", "牛奶", "奶粉", "全脂奶粉 (Chinese: whole milk powder — dairy, not wheat)",
       "Milch", "Molke (German: whey)", "lait", "leche", "mantequilla (Spanish: butter)",
+      "حليب", "لبن", "مسحوق الحليب",
     ],
     dishes: [
       "custard", "brioche (butter + milk)", "bechamel", "white chocolate",
@@ -38,7 +39,7 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
     aliases: [
       "albumin", "albumen", "ovalbumin", "ovomucoid", "lysozyme",
       "meringue powder", "卵", "鶏卵", "卵白", "鸡蛋", "蛋",
-      "Vollei (German: whole egg — an egg product, not whey)", "Ei", "Eier", "oeuf", "huevo",
+      "Vollei (German: whole egg — an egg product, not whey)", "Ei", "Eier", "oeuf", "huevo", "بيض",
     ],
     dishes: [
       "mayonnaise", "aioli", "meringue", "royal icing", "hollandaise",
@@ -64,7 +65,7 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
       "almond", "hazelnut", "cashew", "pistachio", "walnut", "pecan",
       "macadamia", "brazil nut", "nut paste", "nut flour", "nut oil",
       "アーモンド", "くるみ", "カシューナッツ", "坚果 (nuts)", "杏仁", "腰果", "核桃",
-      "Haselnüsse", "Mandeln", "fruits à coque (French: tree nuts, NOT fish or shellfish)", "frutos de cáscara (Spanish: tree nuts)",
+      "Haselnüsse", "Mandeln", "fruits à coque (French: tree nuts, NOT fish or shellfish)", "frutos de cáscara (Spanish: tree nuts)", "مكسرات", "لوز", "كاجو",
     ],
     dishes: [
       "marzipan (almond)", "frangipane (almond)", "praline (hazelnut)",
@@ -74,7 +75,8 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
   },
   {
     group: "Peanuts",
-    aliases: ["groundnut", "arachis oil", "peanut flour", "monkey nuts", "ピーナッツ", "落花生", "花生", "Erdnüsse", "arachide", "cacahuete"],
+    aliases: ["groundnut", "arachis oil", "peanut flour", "monkey nuts", "ピーナッツ", "落花生", "花生", "Erdnüsse", "arachide", "cacahuete",
+      "الفول السوداني (Arabic: PEANUT — literally 'Sudanese bean'; NOT soy)", "فول سوداني"],
     dishes: [
       "satay (peanut-based)", "peanut stew / mafe", "kung pao",
       "bamba",
@@ -86,7 +88,7 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
       "semolina", "spelt", "durum", "farro", "einkorn", "kamut", "bulgur",
       "couscous", "malt", "malt extract", "malt vinegar (barley)",
       "小麦", "小麦粉", "面粉", "全粒粉 (whole-wheat flour — not 全粉乳/全脂奶粉, which are milk)",
-      "Weizenmehl", "farine de blé", "harina de trigo",
+      "Weizenmehl", "farine de blé", "harina de trigo", "قمح", "دقيق القمح",
     ],
     dishes: [
       "seitan (pure wheat gluten)", "panko", "udon", "soy sauce (brewed with wheat)",
@@ -95,12 +97,12 @@ const ALLERGEN_REFERENCE: ReadonlyArray<{
   },
   {
     group: "Soy",
-    aliases: ["soya", "soy protein", "lecithin (E322)", "textured vegetable protein", "TVP", "大豆", "黄豆", "Soja", "Sojalecithin"],
+    aliases: ["soya", "soy protein", "lecithin (E322)", "textured vegetable protein", "TVP", "大豆", "黄豆", "Soja", "Sojalecithin", "فول الصويا"],
     dishes: ["tofu", "tempeh", "edamame", "miso", "natto", "soy sauce", "tamari"],
   },
   {
     group: "Sesame",
-    aliases: ["benne", "sesame oil", "sesamol", "gomashio", "ごま", "胡麻", "芝麻", "Sesam", "sésamo"],
+    aliases: ["benne", "sesame oil", "sesamol", "gomashio", "ごま", "胡麻", "芝麻", "Sesam", "sésamo", "سمسم"],
     dishes: ["tahini", "hummus (tahini)", "halva", "za'atar"],
   },
 ];
@@ -131,12 +133,24 @@ Analyze this food label image. The label may be written in ANY language (English
 ALLERGEN REFERENCE (examples of each pattern — not an exhaustive list; apply the same reasoning to items not listed here):
 ${renderAllergenReference()}
 
+NOT ALLERGENS — these ingredients SOUND like an allergen but definitionally are not one. Never report them as evidence for the allergen listed:
+- "Cocoa butter" / "cacao butter" is a plant fat pressed from cacao beans. It is NOT dairy and contains no milk. Dark chocolate made with cocoa butter and no milk ingredient is dairy-free.
+- "Shea butter" is a plant fat from the shea tree. Not dairy, and not a regulated tree nut.
+- "Coconut" (including coconut milk, coconut oil, coconut cream) is NOT dairy and, under FDA labeling, NOT a tree nut.
+- "Nutmeg" and "butternut" squash contain the letters "nut" but are not nuts.
+- "Eggplant" / "aubergine" contains the letters "egg" but is not egg.
+- Sunflower seeds, pumpkin seeds, and flax are seeds: not sesame, not tree nuts. Sunflower lecithin is NOT soy lecithin.
+- "Cultured"/"live cultures" describes fermentation and is not by itself dairy.
+If the ONLY thing on a label that suggests an allergen is one of these, that allergen is absent — report nothing for it. Flagging a product a person can safely eat teaches them to distrust real warnings.
+
 TRANSLATION TRAPS — these exact words are frequently mistranslated. This table is authoritative; if your first-instinct translation of one of these words differs, the table wins:
 - German "Vollei" = whole EGG (an egg product). It is NEVER whey — whey in German is "Molke". "Vollei" on a label means the product contains egg.
 - Japanese 全粉乳 = whole MILK powder (dairy). 全粒粉 = whole-WHEAT flour (gluten). One character apart, completely different allergens.
 - Chinese 全脂奶粉 = whole MILK powder (dairy), never a wheat product.
 - French "fruits à coque" = TREE NUTS, never fish and never shellfish.
 - Spanish "frutos de cáscara" = TREE NUTS.
+- Arabic "الفول السوداني" (al-ful al-sudani, literally "Sudanese bean") = PEANUT. It is NOT soy and NOT a soybean. "زيت الفول السوداني" is PEANUT OIL, never soybean oil. Arabic for soy is "فول الصويا".
+- Chinese 腰果 = CASHEW (a tree nut). It is NOT "kidney bean" — the first character 腰 means "waist/kidney-shaped" describing the nut's curve, not the vegetable. 腰果 on an ingredients list means the product contains a tree nut.
 
 Return ONLY this JSON object (no other text). Note what you are NOT asked for:
 there is no "flagged" or "safe-to-eat" field for you to decide — you report
@@ -162,6 +176,7 @@ directMatches vs advisories — these are TWO SEPARATE EVIDENCE CHANNELS, never 
 - DECLARED-ALLERGEN SUMMARIES: many labels print a mandatory summary DECLARING what the product contains, separate from the ingredients list, and these are directMatch evidence, not advisories. Japanese labels: （原材料の一部に乳成分・小麦を含む） means "part of the ingredients CONTAINS milk components and wheat" — 〜を含む asserts PRESENCE. Every allergen such a summary declares is a directMatch with that summary as its source; do NOT soften 含む into "may contain" and do NOT leave a declared allergen out of directMatches just because you could not spot it inside the ingredient enumeration itself (the summary exists precisely to declare it authoritatively). The same applies to English "Contains: milk, wheat" lines, Chinese 过敏原信息：含有小麦、乳制品 summaries, and EU labels that bold allergens. Cross-contact statements are different and stay advisories: Japanese cross-contact reads like 同じ製造ラインで／同じ工場で〜を含む製品を製造 ("made on a line / in a factory that also handles X").
 
 COMPOSITE FOODS — distinguish these three cases precisely when deciding directMatches:
+  1a. SOY SAUCE specifically: standard brewed soy sauce (shoyu) is made with WHEAT as well as soy, so it is a directMatch for BOTH Soy and Wheat/gluten. The only exceptions are when the label says "tamari", "gluten-free", or "wheat-free" — then report Soy only. This one is missed often enough to call out separately.
   1. REQUIRED inference: when the label prints the name of a food, dish, or preparation whose standard recipe ALWAYS contains an allergen, that allergen IS a directMatch even though the allergen word itself is not printed (with the printed dish name as its "source" — needing to fill in source is never a reason to skip the inference). "Marzipan" IS almonds (tree nuts). "Satay" is peanut-based. "Mayonnaise" contains egg. "Seitan" IS wheat gluten. "Brioche" contains wheat, butter (dairy), and egg. "Worcestershire sauce" contains anchovies (fish). Recognizing the known composition of a printed name is reading the label, not inventing.
   2. FORBIDDEN invention: never report a directMatch for an ingredient that is neither printed on the label nor entailed by a printed name. Do not report dairy on a dark chocolate just because chocolate products often contain milk. Never guess at text you cannot actually read in the image.
   3. UNCERTAIN composition: if a printed name only SOMETIMES contains an allergen (for example "nougat" may contain egg white, "curry paste" may contain shellfish), do not silently clear it: if the allergen is on the user's SEVERE list and the food usually contains it, report it as a directMatch; otherwise state the possibility explicitly in reasoning (do not fabricate an advisory statement that wasn't actually printed).
@@ -256,6 +271,15 @@ const TRANSLATION_TRAPS: ReadonlyArray<{ term: string; allergenLabel: string }> 
   { term: "牛乳", allergenLabel: "Dairy" },
   { term: "牛奶", allergenLabel: "Dairy" },
   { term: "小麦", allergenLabel: "Gluten / Wheat" },
+  // T182 fix (2026-07-20). Chinese 腰果 (cashew, a tree nut) is read
+  // inconsistently on this exact term even after today's prompt fix: 0/6
+  // baseline runs read it at all, 3/6 fixed-prompt runs read it but
+  // mistranslate it to "kidney bean" (腰 means waist/kidney-shaped, not the
+  // vegetable). 小麦粉 two words later in the same string is read correctly
+  // 6/6 times, so this is a term-specific model gap, not an image legibility
+  // issue. Same class as Vollei/Arabic: prompt correction plus this
+  // deterministic sweep as backstop for whenever the term IS read.
+  { term: "腰果", allergenLabel: "Tree nuts" },
   { term: "卵", allergenLabel: "Eggs" },
   { term: "鸡蛋", allergenLabel: "Eggs" },
   { term: "ピーナッツ", allergenLabel: "Peanuts" },
@@ -268,7 +292,161 @@ const TRANSLATION_TRAPS: ReadonlyArray<{ term: string; allergenLabel: string }> 
   { term: "芝麻", allergenLabel: "Sesame" },
   { term: "fruits a coque", allergenLabel: "Tree nuts" },
   { term: "frutos de cascara", allergenLabel: "Tree nuts" },
+  // Arabic (T180 fix, 2026-07-16). Haiku translated "زيت الفول السوداني"
+  // (peanut oil) as "Soybean oil" in repeated runs — losing the peanut
+  // flag AND inventing a soy one. Same class as the German Vollei trap.
+  // NOTE: "فول سوداني" must be checked before the soy term below would
+  // ever apply; they are distinct strings so ordering is not load-bearing,
+  // but both are listed explicitly rather than relying on substrings.
+  { term: "الفول السوداني", allergenLabel: "Peanuts" },
+  { term: "فول سوداني", allergenLabel: "Peanuts" },
+  { term: "حليب", allergenLabel: "Dairy" },
+  { term: "بيض", allergenLabel: "Eggs" },
+  { term: "قمح", allergenLabel: "Gluten / Wheat" },
+  { term: "سمسم", allergenLabel: "Sesame" },
+  // Soy sauce is brewed with wheat (T202 fix). Guarded below so tamari and
+  // explicitly gluten-free soy sauce never trigger it.
+  { term: "soy sauce", allergenLabel: "Gluten / Wheat" },
+  { term: "shoyu", allergenLabel: "Gluten / Wheat" },
 ];
+
+/**
+ * Ingredient entries where a trap term must NOT fire because the entry
+ * itself declares the exception (T202: tamari and gluten-free soy sauce
+ * are wheat-free, so "soy sauce" -> Wheat is wrong for those).
+ */
+function trapSuppressedBy(entry: string, trapTerm: string): boolean {
+  const e = normalizeForTrap(entry);
+  if (trapTerm === "soy sauce" || trapTerm === "shoyu") {
+    return /tamari|gluten[-\s]?free|wheat[-\s]?free/.test(e);
+  }
+  return false;
+}
+
+/**
+ * NON-ALLERGEN LOOKALIKES (fix for T221, 2026-07-16). Ingredients whose
+ * NAME evokes an allergen they definitionally do not contain. Haiku flagged
+ * dark chocolate as Dairy 4/4 runs with the explicit reasoning "cocoa
+ * butter, which is a dairy derivative" — cocoa butter is a plant fat with
+ * no milk in it at all.
+ *
+ * This is the mirror of TRANSLATION_TRAPS and the more dangerous direction,
+ * because it REMOVES a flag. Three rules keep that safe:
+ *   1. Only botanically-settled cases go in this table. Coconut is here
+ *      because the FDA does not classify it as a tree nut for labeling;
+ *      "butter" here is a pressed plant fat, not dairy.
+ *   2. A veto fires only when the allergen's evidence rests SOLELY on
+ *      lookalike ingredients. If any other ingredient could carry that
+ *      allergen, the flag stands (see appliesVeto below).
+ *   3. `alsoRealFor` records allergens an entry genuinely DOES carry, so
+ *      an entry can be a lookalike for one allergen while still being real
+ *      evidence for another (coconut milk: not Dairy, but if someone's
+ *      profile had a coconut entry it would still be real for that).
+ */
+const NON_ALLERGEN_LOOKALIKES: ReadonlyArray<{
+  /** Matched as a substring of a detected ingredient, accent-insensitive. */
+  term: string;
+  /** Profile allergens this ingredient must NOT be used as evidence for. */
+  notEvidenceFor: string[];
+}> = [
+  // Plant fats whose name contains "butter".
+  { term: "cocoa butter", notEvidenceFor: ["Dairy"] },
+  { term: "cacao butter", notEvidenceFor: ["Dairy"] },
+  { term: "shea butter", notEvidenceFor: ["Dairy", "Tree nuts"] },
+  // Coconut: not a tree nut under FDA labeling, and not dairy.
+  { term: "coconut", notEvidenceFor: ["Dairy", "Tree nuts"] },
+  // Substring "nut" that is not a nut.
+  { term: "nutmeg", notEvidenceFor: ["Tree nuts", "Peanuts"] },
+  { term: "butternut", notEvidenceFor: ["Tree nuts", "Peanuts", "Dairy"] },
+  // Substring "egg" that is not an egg.
+  { term: "eggplant", notEvidenceFor: ["Eggs"] },
+  { term: "aubergine", notEvidenceFor: ["Eggs"] },
+  // Seeds routinely confused with sesame or tree nuts.
+  { term: "sunflower", notEvidenceFor: ["Sesame", "Tree nuts", "Soy"] },
+  { term: "pumpkin seed", notEvidenceFor: ["Sesame", "Tree nuts"] },
+  { term: "flax", notEvidenceFor: ["Sesame", "Tree nuts"] },
+  // "Cultured"/"cultures" evokes yogurt but is not itself dairy.
+  { term: "live culture", notEvidenceFor: ["Dairy"] },
+  { term: "active culture", notEvidenceFor: ["Dairy"] },
+];
+
+/**
+ * True when `allergen` should be dropped because every detected ingredient
+ * that could plausibly support it is a known lookalike.
+ *
+ * The safety property: this asks "is there ANY ingredient that is NOT a
+ * lookalike for this allergen?" and keeps the flag if so. A label reading
+ * "cocoa butter, whole milk powder" keeps Dairy, because milk powder is not
+ * in the lookalike table. Only a label whose sole dairy-ish evidence is
+ * cocoa butter loses the flag.
+ */
+function isSolelyLookalikeEvidence(
+  allergenLabel: string,
+  ingredients: string[],
+): boolean {
+  const vetoTerms = NON_ALLERGEN_LOOKALIKES.filter((l) =>
+    l.notEvidenceFor.includes(allergenLabel),
+  );
+  if (vetoTerms.length === 0) return false;
+
+  let sawLookalike = false;
+  for (const entry of ingredients) {
+    const norm = normalizeForTrap(entry);
+    const isLookalike = vetoTerms.some((l) =>
+      norm.includes(normalizeForTrap(l.term)),
+    );
+    if (isLookalike) {
+      sawLookalike = true;
+      continue;
+    }
+    // A non-lookalike ingredient exists. We cannot prove the model's flag
+    // was wrong, so it stands — cautious side.
+    if (mightCarryAllergen(entry, allergenLabel)) return false;
+  }
+  return sawLookalike;
+}
+
+/**
+ * Loose "could this ingredient plausibly be this allergen?" test, used only
+ * to decide whether a lookalike veto is safe. Deliberately permissive: any
+ * hint keeps the flag. Checks the allergen's own words plus its alias list
+ * from ALLERGEN_REFERENCE, so "whey" still protects Dairy even though the
+ * word "milk" never appears.
+ */
+function mightCarryAllergen(entry: string, allergenLabel: string): boolean {
+  const norm = normalizeForTrap(entry);
+  const labelWords = normalizeForTrap(allergenLabel)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length > 2);
+  // Match the reference group by ANY word of the profile label, so "Dairy"
+  // finds the "Milk / dairy" group and "Gluten / Wheat" finds "Wheat / gluten".
+  const group = ALLERGEN_REFERENCE.find((g) => {
+    const gn = normalizeForTrap(g.group);
+    return labelWords.some((w) => gn.includes(w));
+  });
+  const needles = [
+    ...labelWords,
+    // The group's own name matters: the profile says "Dairy" but labels say
+    // "milk". Without this, "whole milk powder" was not recognised as dairy
+    // evidence and a REAL dairy flag got vetoed (caught by unit test before
+    // this ever shipped, 2026-07-16).
+    ...(group
+      ? normalizeForTrap(group.group)
+          .split(/[^\p{L}\p{N}]+/u)
+          .filter((w) => w.length > 2)
+      : []),
+    ...(group ? group.aliases.map((a) => normalizeForTrap(a).split(" (")[0]) : []),
+    ...(group ? group.dishes.map((d) => normalizeForTrap(d).split(" (")[0]) : []),
+  ].filter((n) => n.length > 2);
+
+  return needles.some((n) => {
+    if (norm.includes(n)) return true;
+    // Plural/singular tolerance: needle "eggs" must still match the
+    // ingredient "dried egg" (also caught by the unit test).
+    const singular = n.endsWith("s") ? n.slice(0, -1) : n;
+    return singular.length > 2 && norm.includes(singular);
+  });
+}
 
 /** Lowercase + strip accents so "à coque"/"cáscara" compare predictably. */
 function normalizeForTrap(s: string): string {
@@ -347,8 +525,19 @@ function matchedDirectEntries(
       }
       const srcTokens = tokensOf(source);
       const labelTokens = tokensOf(matched.label);
+      // Bug found via T200, 2026-07-16: when the model's own "ingredients"
+      // array comes back empty (it does intermittently, independent of
+      // whether directMatches is populated), the "does this source show up
+      // in a detected ingredient?" check below is vacuously true for EVERY
+      // source, because there is nothing to check against. That silently
+      // dropped genuine matches whose source text happened to be terse
+      // ("peanuts", "egg") — the opposite of the file's own rule that an
+      // uninspectable match stays on the cautious side. Guarding on
+      // ingredientTokens.length > 0 makes "nothing to check against" behave
+      // like "no source at all": kept, not dropped.
       const isBareEcho =
         srcTokens.length > 0 &&
+        ingredientTokens.length > 0 &&
         srcTokens.every((t) => labelTokens.some((lt) => tokenMatches(t, lt))) &&
         !srcTokens.some((t) =>
           ingredientTokens.some((ing) => tokenMatches(t, ing)),
@@ -527,6 +716,21 @@ export async function POST(request: Request) {
       parsed.ingredients,
     );
 
+    // Non-allergen lookalike veto (T221 fix). Drops a flag ONLY when every
+    // ingredient that could support it is a known lookalike — cocoa butter
+    // for Dairy, coconut for Tree nuts, eggplant for Eggs. Runs BEFORE the
+    // trap reconciliation below on purpose: traps ADD flags, so anything a
+    // trap re-adds afterwards wins over this veto, never the other way
+    // round.
+    for (let i = directAllergens.length - 1; i >= 0; i--) {
+      const a = directAllergens[i];
+      if (!isSolelyLookalikeEvidence(a.label, parsed.ingredients)) continue;
+      console.warn(
+        `[/api/scan] lookalike veto: dropped ${a.label}; only lookalike ingredients support it in [${parsed.ingredients.join(", ")}]`,
+      );
+      directAllergens.splice(i, 1);
+    }
+
     // Deterministic reconciliation for known mistranslation traps (see
     // TRANSLATION_TRAPS): the ingredients array preserves original printed
     // words, so a trap term appearing in a genuine ingredient entry adds
@@ -539,6 +743,7 @@ export async function POST(request: Request) {
       const entryNorm = normalizeForTrap(entry);
       for (const trap of TRANSLATION_TRAPS) {
         if (!entryNorm.includes(normalizeForTrap(trap.term))) continue;
+        if (trapSuppressedBy(entry, trap.term)) continue;
         const onProfile = matchAllergenLabel(trap.allergenLabel, allergens);
         if (!onProfile) continue;
         if (directAllergens.some((a) => a.label === onProfile.label)) continue;
