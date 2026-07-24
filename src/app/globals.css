@@ -41,6 +41,10 @@
      fullscreen camera view) for the animation's duration, making them jump
      relative to the page instead of staying pinned to the viewport. */
   --animate-page-fade: page-fade 0.22s ease-out both;
+  /* Bottom-sheet entrance. The curve is the one iOS uses for sheets: nearly
+     all the deceleration lands at the end, so the panel arrives fast and
+     settles rather than drifting in. */
+  --animate-sheet-up: sheet-up 0.26s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 @keyframes halo {
@@ -71,6 +75,15 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 

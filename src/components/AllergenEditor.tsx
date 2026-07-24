@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { Allergen, Severity } from "@/lib/storage";
 
-const COMMON: Array<{ id: string; label: string }> = [
+/**
+ * The nine preset allergens. Exported because this list is the app's single
+ * source of truth for "what counts as a preset": the printable card keys its
+ * translations off these exact labels (src/lib/allergenTranslations.ts), and
+ * the quick-allergen sheet offers them as suggestions.
+ */
+export const COMMON: Array<{ id: string; label: string }> = [
   { id: "peanuts", label: "Peanuts" },
   { id: "tree-nuts", label: "Tree nuts" },
   { id: "dairy", label: "Dairy" },

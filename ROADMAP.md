@@ -70,11 +70,34 @@ barcode scanning would use), not the model's general knowledge: asking an
 LLM to invent "a nut-free granola brand" risks recommending something that
 doesn't exist, isn't sold nearby, or isn't actually safe anymore.
 
-### Printable / shareable allergen card, in multiple languages (next up)
+### Printable / shareable allergen card, in multiple languages (built 2026-07-20)
 A summary of someone's allergen list formatted to hand to a waiter, a school
 nurse, a host, or to carry while traveling abroad, translated. Low effort
 since the data already exists, real utility for the exact people this app is
 for. Greenlit 2026-07-13 as the next build after barcode stage 1.
+
+Shipped at `/card`, linked from the profile page: the nine preset allergens
+translated across the same six languages the scan pipeline verifies, print
+isolation so a phone print gives just the card, and custom allergens rendered
+in English with a visible "(EN)" mark rather than a guessed translation. The
+AI alias expansion below is what would eventually give custom allergens real
+translations.
+
+### Quick allergen, one scan only (Taymour's idea, built 2026-07-24)
+Add an allergen at scan time that checks only that scan and never touches the
+saved profile. For checking something for a friend, or a one-off worry that
+doesn't belong on the permanent list.
+
+Shipped on the camera screen, above the Label/Barcode toggle, so it covers
+both modes. That placement is the whole design constraint: barcode scans fire
+the instant a code is detected, with no review step to add anything on, so
+the control has to exist before capture. Chips stay visible the entire time
+rather than hiding in a menu, and the state lives in the scan page component,
+so leaving the page drops it. The allergen does get frozen into that scan's
+`allergens_at_time` history snapshot, which is deliberate: the record has to
+say what was actually checked. Severity is always severe, the cautious
+default when we can't ask. Verified end to end against a real scan, plus a
+direct database check that the snapshot records it and the profile does not.
 
 ### AI alias expansion for custom allergens (Taymour's idea, 2026-07-13)
 When someone adds a custom allergen ("Mustard"), make one model call at

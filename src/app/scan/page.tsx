@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +16,11 @@ import {
   X,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import {
+  makeQuickAllergen,
+  QuickAllergenChips,
+  QuickAllergenSheet,
+} from "@/components/QuickAllergens";
 import { ScanResultCard } from "@/components/ScanResultCard";
 import type { BarcodeLookupResult } from "@/lib/barcode";
 import { addScanDb, getAllergensDb } from "@/lib/db";
@@ -55,6 +60,36 @@ export default function ScanPage() {
   const [mode, setMode] = useState<Mode>("label");
   const [barcodeResult, setBarcodeResult] =
     useState<BarcodeLookupResult | null>(null);
+  // One-off allergens, added at scan time and never written to the profile.
+  // Deliberately NOT cleared by resetToCapture: someone checking a few
+  // products for the same person shouldn't have to re-add it each time, and
+  // the chips stay on screen throughout, so this is never hidden state.
+  // Leaving the page unmounts the component, which is the "one-off" part.
+  const [quickAllergens, setQuickAllergens] = useState<Allergen[]>([]);
+  const [quickSheetOpen, setQuickSheetOpen] = useState(false);
+
+  // What this scan actually checks against. The profile list plus anything
+  // added for this scan only — assembled here so every consumer (both API
+  // calls, the history snapshot, the button count) reads from one place and
+  // a quick allergen can't be silently dropped by one of them.
+  //
+  // Memoized because lookupBarcode closes over it, and the barcode detect
+  // loop keys its interval off lookupBarcode's identity. A fresh array every
+  // render would tear down and rebuild that interval on every render.
+  const scanAllergens = useMemo(
+    () => [...allergens, ...quickAllergens],
+    [allergens, quickAllergens],
+  );
+
+  const addQuickAllergen = (label: string) =>
+    setQuickAllergens((prev) => [...prev, makeQuickAllergen(label)]);
+
+  const removeQuickAllergen = (label: string) =>
+    setQuickAllergens((prev) =>
+      prev.filter(
+        (a) => a.label.trim().toLowerCase() !== label.trim().toLowerCase(),
+      ),
+    );
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -131,7 +166,7 @@ export default function ScanPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             barcode: code,
-            allergens,
+            allergens: scanAllergens,
             flagMayContain: profile?.flag_may_contain ?? true,
           }),
         });
@@ -150,7 +185,7 @@ export default function ScanPage() {
         lookupLockRef.current = false;
       }
     },
-    [allergens, profile, stopCamera],
+    [scanAllergens, profile, stopCamera],
   );
 
   // Barcode detect loop: while the camera is live in barcode mode, ask the
@@ -264,7 +299,7 @@ export default function ScanPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageDataUrl,
-          allergens,
+          allergens: scanAllergens,
           flagMayContain: profile?.flag_may_contain ?? true,
         }),
       });
@@ -281,12 +316,15 @@ export default function ScanPage() {
       // src/lib/db.ts), so this is the one place a scan actually gets saved.
       setResult(newResult);
       setStatus("result");
+      // scanAllergens, not the profile list: the snapshot has to record what
+      // was actually checked, quick additions included, or the history entry
+      // would claim a narrower check than the one that ran.
       addScanDb(
         supabase,
         user.id,
         foodName.trim() || undefined,
         newResult,
-        allergens,
+        scanAllergens,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Network error");
@@ -463,6 +501,18 @@ export default function ScanPage() {
 
         {/* Dock */}
         <div className="px-10 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
+          {/* One-off allergens. Sits above the mode toggle so it applies to
+              both modes — barcode scans fire the moment a code is spotted,
+              with no review step to add anything on. */}
+          <div className="mb-3">
+            <QuickAllergenChips
+              quick={quickAllergens}
+              onRemove={removeQuickAllergen}
+              onOpen={() => setQuickSheetOpen(true)}
+              tone="dark"
+            />
+          </div>
+
           {/* Mode toggle */}
           <div className="mx-auto mb-4 flex w-fit rounded-full bg-white/[0.12] p-1 backdrop-blur">
             <button
@@ -517,6 +567,16 @@ export default function ScanPage() {
             </p>
           )}
         </div>
+
+        {quickSheetOpen && (
+          <QuickAllergenSheet
+            quick={quickAllergens}
+            profile={allergens}
+            onAdd={addQuickAllergen}
+            onRemove={removeQuickAllergen}
+            onClose={() => setQuickSheetOpen(false)}
+          />
+        )}
 
         <canvas ref={canvasRef} className="hidden" />
         <input
@@ -584,6 +644,19 @@ export default function ScanPage() {
                 className="mt-1.5 w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-accent/60 disabled:opacity-50"
               />
             </div>
+            <div>
+              <p className="px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
+                Checking this scan for
+              </p>
+              <div className="mt-1.5">
+                <QuickAllergenChips
+                  quick={quickAllergens}
+                  onRemove={removeQuickAllergen}
+                  onOpen={() => setQuickSheetOpen(true)}
+                  tone="light"
+                />
+              </div>
+            </div>
             <button
               type="button"
               onClick={handleAnalyze}
@@ -596,8 +669,8 @@ export default function ScanPage() {
                   Analyzing…
                 </>
               ) : (
-                `Analyze (${allergens.length} allergen${
-                  allergens.length !== 1 ? "s" : ""
+                `Analyze (${scanAllergens.length} allergen${
+                  scanAllergens.length !== 1 ? "s" : ""
                 })`
               )}
             </button>
@@ -831,6 +904,16 @@ export default function ScanPage() {
           </div>
         )}
       </main>
+
+      {quickSheetOpen && (
+        <QuickAllergenSheet
+          quick={quickAllergens}
+          profile={allergens}
+          onAdd={addQuickAllergen}
+          onRemove={removeQuickAllergen}
+          onClose={() => setQuickSheetOpen(false)}
+        />
+      )}
 
       <canvas ref={canvasRef} className="hidden" />
       <input
