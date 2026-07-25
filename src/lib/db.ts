@@ -193,6 +193,43 @@ export async function clearScansDb(
 // from supabase/README.md. Reading it goes through useProfile(); this is
 // just the write side.
 
+// ----- Account -----
+
+/**
+ * Permanently deletes the signed-in user's account and everything attached
+ * to it.
+ *
+ * This calls a SECURITY DEFINER Postgres function rather than the Supabase
+ * admin API, because the admin API needs the service role key and that key
+ * must never ship to the browser or to Vercel. The function can only ever
+ * delete auth.uid(), so there is no id to pass and no way to aim it at
+ * someone else. See supabase/migrations/..._delete_own_account.sql.
+ *
+ * The user's rows are removed by the `on delete cascade` foreign keys on
+ * profiles, allergens, and scans, not by code here.
+ *
+ * Returns an error message on failure, or null on success. Callers MUST
+ * check: reporting a deletion that did not happen would be a serious lie in
+ * a privacy feature.
+ */
+export async function deleteAccountDb(supabase: Client): Promise<string | null> {
+  const { error } = await supabase.rpc("delete_own_account");
+  if (!error) return null;
+
+  console.error("[db] deleteAccountDb:", error.message);
+  // PGRST202 is PostgREST's "no such function in the schema cache", which is
+  // what you actually get here when the migration has not been applied to
+  // this environment yet. (Postgres's own undefined_function code, 42883,
+  // is checked too, since a direct SQL path would raise that instead.)
+  // Verified against a real unmigrated database on 2026-07-24: the message
+  // reads "Could not find the function public.delete_own_account without
+  // parameters in the schema cache".
+  if (error.code === "PGRST202" || error.code === "42883") {
+    return "Account deletion isn't set up on this server yet. Nothing was deleted.";
+  }
+  return "Couldn't delete your account. Nothing was deleted, so try again.";
+}
+
 export async function setFlagMayContainDb(
   supabase: Client,
   userId: string,

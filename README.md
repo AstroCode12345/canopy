@@ -145,6 +145,10 @@ order, through either the Supabase SQL editor or the Supabase CLI. See
 [supabase/README.md](supabase/README.md) for the data model and the reasoning
 behind the RLS policies.
 
+Account deletion depends on the `delete_own_account` migration specifically.
+Until it is applied, the delete button reports that deletion is not set up on
+this server and deletes nothing, rather than failing silently.
+
 ```bash
 npm run dev -- -p 3002
 ```
@@ -188,8 +192,6 @@ failure that motivated it.
   incomplete. Canopy never shows a green verdict from a barcode alone, and
   always offers the label scan as the confirmation step.
 - No rate limiting on the scan endpoint yet.
-- No privacy policy or account deletion yet, which matters because allergen
-  lists are health-adjacent personal data.
 - T182, above.
 
 Ideas that were considered and deliberately not planned, including medication

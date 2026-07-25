@@ -244,6 +244,16 @@ function SignInForm() {
                 mode === "create" ? "new-password" : "current-password"
               }
             />
+            {mode === "in" && (
+              <div className="flex justify-end">
+                <Link
+                  href="/forgot-password"
+                  className="px-1 text-[13px] font-medium text-muted transition-colors hover:text-accent"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
           </div>
 
           {error && (

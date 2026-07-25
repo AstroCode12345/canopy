@@ -6,12 +6,16 @@ import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   Download,
+  KeyRound,
+  Lock,
   LifeBuoy,
   LogOut,
   ShieldAlert,
   Trash2,
+  UserX,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { clearScansDb, getScansDb, setFlagMayContainDb } from "@/lib/db";
 import { useProfile } from "@/lib/useProfile";
 
@@ -25,6 +29,7 @@ export default function SettingsPage() {
   const [flagMayContain, setFlagMayContain] = useState(true);
   const [scanCount, setScanCount] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (profile) setFlagMayContain(profile.flag_may_contain);
@@ -127,6 +132,30 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Security */}
+        <section>
+          <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
+            Security
+          </p>
+          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+            <Link
+              href="/change-password"
+              className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-surface-2"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-muted">
+                <KeyRound className="h-5 w-5" strokeWidth={1.75} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[15px] font-medium">Change password</p>
+                <p className="text-[13px] text-faint">
+                  Set a new password for this account
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-faint" />
+            </Link>
+          </div>
+        </section>
+
         {/* Scanning */}
         <section>
           <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
@@ -209,6 +238,24 @@ export default function SettingsPage() {
                 <p className="text-[13px] text-faint">Delete all saved scans</p>
               </div>
             </button>
+            <div className="h-px bg-border" />
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-danger-soft"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
+                <UserX className="h-5 w-5" strokeWidth={1.75} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[15px] font-medium text-danger">
+                  Delete account
+                </p>
+                <p className="text-[13px] text-faint">
+                  Your login, allergens, and every scan
+                </p>
+              </div>
+            </button>
           </div>
           <p className="mt-2.5 px-1 text-[12px] leading-snug text-faint">
             Your allergens and scans are saved to your account. Only you can
@@ -237,12 +284,32 @@ export default function SettingsPage() {
               </div>
               <ChevronRight className="h-5 w-5 text-faint" />
             </Link>
+            <div className="h-px bg-border" />
+            <Link
+              href="/privacy"
+              className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-surface-2"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <Lock className="h-5 w-5" strokeWidth={1.75} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[15px] font-medium">Privacy</p>
+                <p className="text-[13px] text-faint">
+                  What&apos;s stored, and what never is
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-faint" />
+            </Link>
           </div>
           <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
             Canopy v1.0 · Not a medical device
           </p>
         </section>
       </main>
+
+      {deleteOpen && (
+        <DeleteAccountDialog onClose={() => setDeleteOpen(false)} />
+      )}
 
       <BottomNav />
     </div>

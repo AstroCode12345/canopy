@@ -54,12 +54,26 @@ so deleting an account cleanly removes everything that belongs to it.
   setting today (`flag_may_contain`). One boolean doesn't earn a table; we'll
   split it out only if settings actually multiply.
 
+## Functions
+
+- **`delete_own_account()`** lets a user permanently delete their own account.
+  Removing a row from `auth.users` normally requires the service role key,
+  which must never ship to the browser or to Vercel, so this is a
+  `SECURITY DEFINER` function instead: the elevated permission lives in one
+  narrow function rather than in a key we would have to deploy somewhere. It
+  takes no arguments and only ever deletes `auth.uid()`, so there is nothing
+  to tamper with, and the `on delete cascade` foreign keys above clear the
+  user's profile, allergens, and scans automatically. The migration file
+  explains each guard, including why `set search_path = ''` matters for any
+  `SECURITY DEFINER` function.
+
 ## Applying the migrations
 
 Until we wire up the Supabase CLI, apply each file's SQL in the Supabase
 dashboard: **SQL Editor → New query → paste → Run**, in numbered order
-(`profiles`, then `allergens`, then `scans`). Order matters because later
-tables and the signup trigger depend on earlier ones.
+(`profiles`, then `allergens`, then `scans`, then `delete_own_account`).
+Order matters because later tables and the signup trigger depend on earlier
+ones.
 
 Later we can set up `supabase link` + `supabase db push` so these files apply
 automatically and the repo stays in sync with the live database.

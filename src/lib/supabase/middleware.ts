@@ -22,7 +22,25 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Pages that make sense for a signed-out visitor.
-const PUBLIC_PATHS = ["/welcome", "/sign-in", "/auth", "/disclaimer"];
+//
+// /forgot-password has to be here by definition: someone who cannot sign in
+// is signed out, so gating it behind a session would make the recovery flow
+// impossible to start. /privacy is here because a privacy policy you must
+// create an account to read is not much of a privacy policy.
+//
+// /reset-password is deliberately NOT here. Recovery links land on
+// /auth/callback first, which trades the one-time code for a real session
+// before forwarding, so anyone legitimately reaching that page already has
+// one. Leaving it protected means the page can assume a session exists, and
+// an expired link fails earlier, at the callback, with a clearer message.
+const PUBLIC_PATHS = [
+  "/welcome",
+  "/sign-in",
+  "/auth",
+  "/disclaimer",
+  "/forgot-password",
+  "/privacy",
+];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

@@ -89,7 +89,15 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      // Deletes the calling user's own account. Takes no arguments on
+      // purpose: it always acts on auth.uid(), so it cannot be aimed at
+      // another account. See ..._delete_own_account.sql.
+      delete_own_account: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
