@@ -145,9 +145,12 @@ order, through either the Supabase SQL editor or the Supabase CLI. See
 [supabase/README.md](supabase/README.md) for the data model and the reasoning
 behind the RLS policies.
 
-Account deletion depends on the `delete_own_account` migration specifically.
-Until it is applied, the delete button reports that deletion is not set up on
-this server and deletes nothing, rather than failing silently.
+Two migrations carry behavior the app degrades around rather than crashing on.
+Until `delete_own_account` is applied, the delete button reports that deletion
+is not set up on this server and deletes nothing. Until `api_usage_rate_limit`
+is applied, the rate limiter logs an error and allows the request, since
+blocking scans to protect a budget is the wrong trade for a tool people rely
+on in a shop.
 
 ```bash
 npm run dev -- -p 3002
@@ -191,7 +194,8 @@ failure that motivated it.
   absent, since Open Food Facts is volunteer maintained and can be
   incomplete. Canopy never shows a green verdict from a barcode alone, and
   always offers the label scan as the confirmation step.
-- No rate limiting on the scan endpoint yet.
+- No error monitoring, so a failure someone hits in a shop is not reported
+  anywhere except the server logs.
 - T182, above.
 
 Ideas that were considered and deliberately not planned, including medication

@@ -4,122 +4,97 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Canopy** — a mobile-first PWA that scans food labels and flags ingredients matching the user's saved allergies or intolerances. Built for Taymour as a first-real-product project; replaces an older Replit "safeeats" prototype at `~/Downloads/safeeats/` (kept around as reference for prompt rules and disclaimer copy, **not** for code reuse).
+**Canopy** is a mobile-first PWA that scans food labels and flags ingredients matching the user's saved allergies or intolerances. Built for Taymour as a first-real-product project, and entered in the Congressional App Challenge. It replaces an older Replit "safeeats" prototype at `~/Downloads/safeeats/` (reference for prompt heuristics and disclaimer copy only, **not** for code reuse: different stack, and its prompt design predates every safety mechanism below).
 
-Production stack: **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Anthropic Claude Haiku 4.5 vision.** v1 has no auth, no database, no payments — all user data lives in `localStorage`.
+Stack: **Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase (Postgres, RLS, cookie auth) + Anthropic Claude Haiku 4.5 vision.** Deployed on Vercel.
+
+Start with [README.md](README.md) for the safety architecture and [supabase/README.md](supabase/README.md) for the data model. This file covers the things that bite while editing.
 
 ## Commands
 
 ```bash
-# Dev server — MUST use port 3002 (Reply AI owns 3000 on this machine).
-# The folder name has spaces + capitals, so when launching from outside the
-# folder use --prefix instead of cd.
+# Dev server: MUST use port 3002 (Reply AI owns 3000 on this machine).
 npm run dev -- -p 3002
-# or:  npm run dev --prefix "/Users/Taymo/Allergy Scan AI" -- -p 3002
 
 npm run build           # Production build
-npm run start           # Run the production build
-npm run lint            # ESLint (Next.js's flat config in eslint.config.mjs)
+npm run lint            # ESLint
+npm run redteam         # Adversarial suite, needs the dev server on 3002
+npm run redteam:images  # Re-render fixture images after editing cases.json
 ```
 
-There are no tests in this project.
+**Preview tooling:** the dev server is registered in `.claude/launch.json` as `allergen-scanner`. Use `mcp__Claude_Browser__preview_start` with that name rather than running `npm run dev` through Bash.
 
-**Anthropic API key** for `/api/scan` lives in `.env.local` (gitignored) as `ANTHROPIC_API_KEY=sk-ant-...`. Without it, the scan route returns a clear 500 with instructions.
-
-**Preview tooling:** the dev server is registered in `/Users/Taymo/Claude/.claude/launch.json` as `allergen-scanner` (port 3002). Use `mcp__Claude_Preview__preview_start` with name `allergen-scanner` rather than running `npm run dev` via Bash.
+**Env** lives in `.env.local` (gitignored): `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. `SUPABASE_SERVICE_ROLE_KEY` is present locally for one-off admin scripts only. **It must never be deployed to Vercel and must never get a `NEXT_PUBLIC_` prefix**, since that would ship an RLS-bypassing key to the browser. No app code reads it, and it should stay that way.
 
 ## Big things that bite
 
-1. **This is Next.js 16, not your training data.** APIs and conventions have shifted (see `AGENTS.md`). Check `node_modules/next/dist/docs/` before assuming syntax.
-2. **Tailwind v4** — no `tailwind.config.ts` file. **All theme tokens live in `src/app/globals.css`** under the `@theme` block. Custom colors (`accent`, `danger`, `warning`, `accent-soft`, etc.) and keyframes (`halo`, `fade-in`) are defined there.
-3. **Folder name** `Allergy Scan AI` has spaces + capitals, which npm rejects as a package name. The `package.json` `name` is `allergen-scanner-init` (from the temp-folder scaffolding workaround). Don't change the folder name without also updating the launch config.
-4. **The brand name is Canopy**, not "Allergen Scanner" — the folder name is legacy. Use `Canopy` in user-facing copy, metadata, and the manifest.
+1. **This is Next.js 16, not your training data.** Conventions have shifted (see `AGENTS.md`). Check `node_modules/next/dist/docs/` before assuming syntax.
+2. **Tailwind v4**: there is no `tailwind.config.ts`. All theme tokens live in the `@theme` block in `src/app/globals.css`.
+3. **The model never decides safety.** See below. This is the project's central invariant and the easiest thing to accidentally undo.
+4. **Two migrations may be unapplied.** `delete_own_account` and `api_usage_rate_limit` need pasting into the Supabase SQL editor (no CLI is linked). Both fail visibly rather than silently if missing.
+5. **The brand name is Canopy.** Use it in all user-facing copy, metadata, and the manifest.
 
 ## Architecture
 
-### Pages (App Router, all client components)
+### The safety invariant: evidence in, verdict derived
 
-- **`/` (Home)** — hero with leaf-branded CANOPY kicker, big animated green Scan button, recent scans list (max 3) with severity-coded left stripes, "About Canopy & safety" footer link. Shows `OnboardingTour` modal on truly-first visit (no allergens + no scans + no onboarding flag).
-- **`/scan`** — file/camera capture → `POST /api/scan` → result card. State machine: `idle | preview | analyzing | result | error`. If no allergens saved, shows a "Set up allergens" prompt that links to `/profile` (no scan can happen without them).
-- **`/profile`** — full-page allergen editor with sticky Save bar above the bottom nav. Uses the same `AllergenEditor` as the (now mostly historical) `AllergenSetup` modal.
-- **`/history`** — list of past scans with severity-coded left stripes. Tap a row → bottom-sheet modal with full `ScanResultCard` + delete action.
-- **`/disclaimer`** — static safety/limitations page. Linked from Home footer and from a "Why?" link inside every `ScanResultCard`. Copy ported from the original safeeats — keep it serious.
+`/api/scan` asks the vision model for **evidence only**: the ingredients it can read, which allergens it found with the printed `source` text justifying each, any precautionary statements, and whether the image was legible. There is deliberately **no "safe" or "flagged" field** in the response schema. The server derives `flaggedAllergies` / `flaggedIntolerances` / `status` itself by matching that evidence against the user's profile.
 
-The `BottomNav` is a 4-tab fixed bar (Home / Scan / Profile / History) using `usePathname()` for active-state highlighting. Pages compose their own header + `<main>` + `<BottomNav />`.
+This is what makes prompt injection on a label structurally powerless, and what makes severity drift impossible. **Do not add a verdict field to the model's output schema**, and do not let the model's own words decide a tier. If a scan behaves wrongly, the fix is almost always in the server-side derivation or in a deterministic backstop, not in trusting the model more.
 
-### API route — `/api/scan`
+Supporting mechanisms in the same file, each commented with the specific failure that motivated it:
 
-`POST` accepts `{ imageDataUrl: string, allergens: Allergen[] }`. Calls Claude Haiku 4.5 with the image as base64 + a JSON-only system prompt + an **assistant prefill of `"{"`** to force valid JSON output. Returns `ScanResult` shape (see storage.ts) or an error.
+- **Two evidence channels.** `directMatches` (actual ingredients) and `advisories` ("may contain") never merge. Whether an advisory also flags is a deterministic server-side decision from the user's `flag_may_contain` setting.
+- **`TRANSLATION_TRAPS`** reconciles terms the model reliably mistranslates (German `Vollei`, Arabic peanut oil, Chinese 腰果). Additive only: it can add a missed flag, never remove one.
+- **`NON_ALLERGEN_LOOKALIKES`** is the mirror, and because it *removes* a flag it is gated much harder: it fires only when every ingredient that could plausibly support the allergen is a known lookalike.
 
-Hard prompt rules baked into the route (don't soften without thinking):
-- Split user sensitivities into `ALLERGIES (avoid)` vs `INTOLERANCES (be aware)` lists
-- "May contain traces" and "manufactured in a facility with" count as flagging
-- Same ingredient matching both → severe wins
-- Never invent ingredients not visible
-- Blurry/unreadable → `safe=false`, empty arrays, explain in `reasoning`
-- For safe results, reasoning MUST include the literal phrase `"No allergens detected, but please double-check the physical label."`
+### Pages (App Router, client components unless noted)
 
-### Storage layer — `src/lib/storage.ts`
+`/` Home · `/scan` camera, barcode detection, results · `/profile` allergen editor · `/history` past scans · `/settings` account, data, links · `/card` printable multi-language allergen card · `/privacy` · `/disclaimer` · `/welcome` and `/sign-in` auth · `/forgot-password`, `/reset-password`, `/change-password` password flows.
 
-**This file is the single source of truth for all persisted types.** Components import `Allergen`, `Scan`, `ScanResult`, `Severity` from here.
+`BottomNav` is a 5-tab fixed bar (Home / History / Scan / Profile / Settings) with Scan as a raised FAB.
 
-Keys: `allergens:v1`, `scans:v1`, `onboarding:v1`. Bumping the `:v1` suffix is the migration mechanism — there's no schema versioning beyond that.
+Route protection lives in `src/lib/supabase/middleware.ts`. `PUBLIC_PATHS` is the list of pages a signed-out visitor may reach; **`api/` is excluded from middleware entirely** so the redteam suite can drive `/api/scan` with no session. API routes guard themselves through `src/lib/apiAuth.ts`.
 
-Two important compatibility shims:
-- `getAllergens()` defaults missing `severity` to `"allergy"` (the safer choice if we don't know)
-- `normalizeScan()` handles old scans that had a flat `flagged: string[]` by treating those entries as allergies
+### API routes
 
-`resultSeverity(result)` returns `"safe" | "intolerance" | "allergy"` — use it any time you switch UI on the verdict (it's how list rows + the result card pick their colors).
+Both `/api/scan` and `/api/barcode` call `guardApiRoute()` as their first line, which does auth plus a per-account hourly rate limit in a single `getUser()` pass. **Both are production-only no-ops**, which is what keeps `npm run redteam` working locally. The rate limiter **fails open and logs loudly** if its check errors: this is a tool someone may be relying on in a shop, so a broken counter must not block scans.
 
-Scans are capped at 50 (newest first) to keep localStorage under the 5MB limit. **No image bytes are stored** — only text fields. If you add image thumbnails, downscale aggressively first.
+### Data layer
+
+`src/lib/db.ts` is the **only** file that queries Supabase tables. Pages call its functions and never write raw queries. `src/lib/storage.ts` holds shared types (`Allergen`, `Scan`, `ScanResult`, `Severity`) plus `scanStatusOf()` and `resultVerdict()`. Use those any time UI switches on a verdict, never read `status` directly, since they tolerate pre-July-2026 records that predate the field.
+
+Only one thing still lives in `localStorage`: the onboarding-seen flag, which genuinely belongs to the device.
+
+Scans snapshot the allergen list into `allergens_at_time`, so editing your profile never rewrites history. Scans are immutable by design (no UPDATE policy in the database). **No image bytes are ever stored**, which the privacy page states publicly, so keep it true.
 
 ### Design system
 
-Colors defined in `src/app/globals.css` `@theme`:
+Palette is **"Grove"**, defined in the `@theme` block of `src/app/globals.css`. Read the tokens there rather than hardcoding hex: `background` `#f4f7f0`, `foreground` `#16241c`, `card`, `surface-2`, `muted`, `faint`, `border`, `border-strong`, `accent` `#1c7a53`, plus `danger` / `warning` each with `-soft` and `-ink` variants. The `-ink` colors exist for readable text on a `-soft` background.
 
-| Token | Hex | Use |
-|---|---|---|
-| `background` | `#FAF9F6` | Page background (warm off-white) |
-| `foreground` | `#111111` | Primary text |
-| `card` | `#FFFFFF` | Card surfaces |
-| `muted` | `#6B7280` | Secondary text |
-| `border` | `#ECECEC` | Hairline borders |
-| `accent` / `accent-soft` | `#16A34A` / 10% tint | Green — safe / primary CTA |
-| `danger` / `danger-soft` | `#DC2626` / 10% tint | Red — severe allergy / avoid |
-| `warning` / `warning-soft` | `#D97706` / amber tint | Amber — mild intolerance / be aware |
+Typography: Schibsted Grotesk + JetBrains Mono via `next/font/google`.
 
-Animations (`halo`, `fade-in`) and the `.hero-bg` radial-gradient helper also live in `globals.css`. **All animations gate behind `motion-safe:`** — `prefers-reduced-motion` is respected.
+Conventions:
+- Cards: `rounded-3xl border border-border bg-card shadow-soft`
+- Icon squares: `h-10 w-10 rounded-xl bg-accent-soft text-accent`
+- Primary CTA: `rounded-full bg-accent text-white shadow-soft`
+- Section kicker: `font-mono text-[11px] uppercase tracking-[0.16em] text-faint`
+- Bottom sheets: `animate-sheet-up` with a grab handle. **Sheets that can open over the camera need an explicit `text-foreground`**, or headings inherit the camera's `text-white` and vanish against the card.
+- Severity colors are part of the safety design, not decoration. Do not restyle the result card's hierarchy without keeping the tiers legible.
+- `prefers-reduced-motion` is respected globally in `globals.css`.
 
-Typography: Geist Sans + Geist Mono via `next/font/google`, wired in `src/app/layout.tsx`.
+### Testing
 
-Visual conventions:
-- Cards: `rounded-2xl border border-border bg-card`
-- Icon squares: `h-10 w-10 rounded-xl bg-accent-soft text-accent` (swap colors for danger/warning variants)
-- Primary CTAs: `rounded-full bg-accent text-white shadow-soft`
-- Chip selected/deselected states: see `AllergenEditor` `SeverityChip` — three states (off / allergy red / intolerance amber)
-- List row severity stripe: `border-l-[3px] border-l-{accent|warning|danger}/60-70`
-- Header pattern: H1 + subtitle only. **Don't add a CANOPY kicker to internal pages** — kicker is Home-only branding.
+`tests/allergen-redteam/` holds 77 adversarial fixtures across 8 categories, built to force false negatives. `cases.json` defines them, `gen-images.mjs` renders them to label images, `run.mjs` sends each through the real `/api/scan`.
 
-### PWA setup
-
-Manifest and icons are generated programmatically via Next.js metadata-route conventions — there are no binary PNG files in `public/`:
-
-- `src/app/manifest.ts` → served at `/manifest.webmanifest` (Next.js auto-injects `<link rel="manifest">`)
-- `src/app/icon.tsx` → served at `/icon` (512×512 PNG via `next/og`)
-- `src/app/apple-icon.tsx` → served at `/apple-icon` (180×180)
-
-Theme color `#16a34a` set in `layout.tsx` viewport config.
-
-## Reference files when stuck
-
-- **`/Users/Taymo/.claude/plans/i-m-building-a-mobile-glowing-beacon.md`** — running plan + shipped log for every pass. Read this to understand *why* something is the way it is before changing it.
-- **`~/Downloads/safeeats/`** — the original Replit prototype. Useful only as reference for AI prompt heuristics and disclaimer copy. Stack is different (Vite + Express + OpenAI), so don't copy code patterns.
+**A new case that fails is doing its job. Fix the app, not the test.** Fixture notes carry measured evidence for known-failing cases; several end in "DO NOT relax this fixture," and that instruction is meant literally.
 
 ## Working style
 
-The user is a beginner doing his first mobile product. He wants:
-- Plain-English explanations before doing non-trivial steps
+Taymour is a student learning by building. He wants:
+- Plain-English explanations before non-trivial steps
 - One step at a time with check-ins at meaningful boundaries
-- No fake placeholder content — use empty states instead of fabricated names/scans
-- No "I'll do X then Y" promises — just deliver the current step
-- Proactive plan-file updates after every meaningful ship
+- No fake placeholder content, use empty states instead
+- **No em dashes** in body copy, comments, or commit messages
+- Proactive `ROADMAP.md` updates after every meaningful ship
+- The `design-pass` skill run *before* frontend work, not as a rescue afterwards

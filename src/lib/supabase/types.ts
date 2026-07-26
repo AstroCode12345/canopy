@@ -97,6 +97,12 @@ export type Database = {
         Args: Record<string, never>;
         Returns: undefined;
       };
+      // Records one paid-route call and returns how many the caller has made
+      // in the window, including this one. See ..._api_usage_rate_limit.sql.
+      record_and_check_rate_limit: {
+        Args: { p_endpoint: string; p_window_seconds: number };
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

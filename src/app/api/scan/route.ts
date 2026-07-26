@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { requireSessionInProduction } from "@/lib/apiAuth";
+import { guardApiRoute } from "@/lib/apiAuth";
 import type { Advisory, Allergen, ScanResult, ScanStatus } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -601,7 +601,9 @@ function extractJsonObject(rawText: string): unknown {
 }
 
 export async function POST(request: Request) {
-  const blocked = await requireSessionInProduction();
+  // 60/hour is far above real use (a heavy grocery trip is tens of scans)
+  // and still caps what one account can spend.
+  const blocked = await guardApiRoute({ endpoint: "scan", maxPerHour: 60 });
   if (blocked) return blocked;
 
   if (!process.env.ANTHROPIC_API_KEY) {

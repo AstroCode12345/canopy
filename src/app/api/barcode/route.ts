@@ -4,7 +4,7 @@ import {
   type BarcodeLookupResult,
   type OffProduct,
 } from "@/lib/barcode";
-import { requireSessionInProduction } from "@/lib/apiAuth";
+import { guardApiRoute } from "@/lib/apiAuth";
 import type { Allergen } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -35,7 +35,10 @@ interface RequestBody {
 }
 
 export async function POST(request: Request) {
-  const blocked = await requireSessionInProduction();
+  // Higher than the scan limit: barcode mode fires automatically whenever a
+  // code comes into view, so legitimate use bursts more, and each call is a
+  // free database lookup rather than a paid model request.
+  const blocked = await guardApiRoute({ endpoint: "barcode", maxPerHour: 120 });
   if (blocked) return blocked;
 
   let body: RequestBody;
