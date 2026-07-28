@@ -136,6 +136,9 @@ export default function AllergenCardPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
+                {/* English names here, native names on the card: whoever is
+                    picking does not read these languages, and whoever reads
+                    the card does. */}
                 {CARD_LANGUAGES.map(({ code, nativeName, englishName }) => {
                   const on = selected.has(code);
                   return (
@@ -144,17 +147,14 @@ export default function AllergenCardPage() {
                       type="button"
                       onClick={() => toggle(code)}
                       aria-pressed={on}
-                      // englishName in the label so someone can find a
-                      // language whose own script they cannot read.
-                      aria-label={`${englishName}${on ? ", selected" : ""}`}
-                      title={englishName}
+                      title={nativeName}
                       className={`rounded-full px-3.5 py-2 text-sm font-medium transition-all active:scale-95 ${
                         on
                           ? "bg-accent text-white"
                           : "bg-card text-foreground ring-1 ring-border hover:ring-accent/40"
                       }`}
                     >
-                      {nativeName}
+                      {englishName}
                     </button>
                   );
                 })}

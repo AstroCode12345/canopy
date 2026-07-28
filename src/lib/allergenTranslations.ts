@@ -52,37 +52,53 @@ export type CardLanguage =
   | "vi"
   | "id";
 
+/**
+ * The two names exist because the picker and the card have different
+ * readers, and each needs the name its own reader can act on.
+ *
+ * englishName is for the PICKER. The app is in English and the person
+ * choosing is, by definition, selecting languages they do not speak, so
+ * "日本語" gives them nothing to act on and "Japanese" does.
+ *
+ * nativeName is for the CARD. There the reader is the waiter or host who
+ * does speak it, scanning a stack of blocks for the one they can read.
+ * "日本語" is found instantly; "Japanese" in Latin script is a slower hop.
+ *
+ * Order is alphabetical by englishName with English pinned first, since the
+ * picker shows English names and 22 unordered entries are hard to scan.
+ * This array's order is also the order blocks print on the card.
+ */
 export const CARD_LANGUAGES: ReadonlyArray<{
   code: CardLanguage;
-  /** How the language names itself, which is what a reader recognizes. */
+  /** How the language names itself. Shown on the card. */
   nativeName: string;
-  /** For the picker, so the cardholder can find a language they don't read. */
+  /** The English name. Shown in the picker. */
   englishName: string;
   /** Right-to-left scripts need dir="rtl" or the punctuation lands wrong. */
   rtl?: true;
 }> = [
   { code: "en", nativeName: "English", englishName: "English" },
-  { code: "es", nativeName: "Español", englishName: "Spanish" },
+  { code: "ar", nativeName: "العربية", englishName: "Arabic", rtl: true },
+  { code: "zh", nativeName: "中文", englishName: "Chinese" },
+  { code: "cs", nativeName: "Čeština", englishName: "Czech" },
+  { code: "nl", nativeName: "Nederlands", englishName: "Dutch" },
   { code: "fr", nativeName: "Français", englishName: "French" },
   { code: "de", nativeName: "Deutsch", englishName: "German" },
-  { code: "it", nativeName: "Italiano", englishName: "Italian" },
-  { code: "pt", nativeName: "Português", englishName: "Portuguese" },
-  { code: "nl", nativeName: "Nederlands", englishName: "Dutch" },
-  { code: "pl", nativeName: "Polski", englishName: "Polish" },
-  { code: "sv", nativeName: "Svenska", englishName: "Swedish" },
-  { code: "cs", nativeName: "Čeština", englishName: "Czech" },
   { code: "el", nativeName: "Ελληνικά", englishName: "Greek" },
-  { code: "ru", nativeName: "Русский", englishName: "Russian" },
-  { code: "tr", nativeName: "Türkçe", englishName: "Turkish" },
-  { code: "ar", nativeName: "العربية", englishName: "Arabic", rtl: true },
   { code: "he", nativeName: "עברית", englishName: "Hebrew", rtl: true },
   { code: "hi", nativeName: "हिन्दी", englishName: "Hindi" },
-  { code: "zh", nativeName: "中文", englishName: "Chinese" },
+  { code: "id", nativeName: "Bahasa Indonesia", englishName: "Indonesian" },
+  { code: "it", nativeName: "Italiano", englishName: "Italian" },
   { code: "ja", nativeName: "日本語", englishName: "Japanese" },
   { code: "ko", nativeName: "한국어", englishName: "Korean" },
+  { code: "pl", nativeName: "Polski", englishName: "Polish" },
+  { code: "pt", nativeName: "Português", englishName: "Portuguese" },
+  { code: "ru", nativeName: "Русский", englishName: "Russian" },
+  { code: "es", nativeName: "Español", englishName: "Spanish" },
+  { code: "sv", nativeName: "Svenska", englishName: "Swedish" },
   { code: "th", nativeName: "ไทย", englishName: "Thai" },
+  { code: "tr", nativeName: "Türkçe", englishName: "Turkish" },
   { code: "vi", nativeName: "Tiếng Việt", englishName: "Vietnamese" },
-  { code: "id", nativeName: "Bahasa Indonesia", englishName: "Indonesian" },
 ];
 
 type Localized = Record<CardLanguage, string>;
