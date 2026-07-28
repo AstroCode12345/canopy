@@ -31,7 +31,7 @@ npm run redteam:images  # Re-render fixture images after editing cases.json
 1. **This is Next.js 16, not your training data.** Conventions have shifted (see `AGENTS.md`). Check `node_modules/next/dist/docs/` before assuming syntax.
 2. **Tailwind v4**: there is no `tailwind.config.ts`. All theme tokens live in the `@theme` block in `src/app/globals.css`.
 3. **The model never decides safety.** See below. This is the project's central invariant and the easiest thing to accidentally undo.
-4. **Two migrations may be unapplied.** `delete_own_account` and `api_usage_rate_limit` need pasting into the Supabase SQL editor (no CLI is linked). Both fail visibly rather than silently if missing.
+4. **Migrations apply by hand.** No Supabase CLI is linked, so a new migration only reaches the database when someone pastes it into the SQL editor. All five are applied as of 2026-07-26, verified against the live database. Write new ones to fail visibly rather than silently, the way `delete_own_account` and the rate limiter do, since "applied" is a manual step that can be forgotten.
 5. **The brand name is Canopy.** Use it in all user-facing copy, metadata, and the manifest.
 
 ## Architecture

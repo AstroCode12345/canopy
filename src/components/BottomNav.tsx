@@ -16,7 +16,10 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70 pb-[env(safe-area-inset-bottom)]">
+    // print:hidden keeps app navigation off paper. The allergen card at
+    // /card is the only thing in this app anyone prints, and the nav was
+    // landing on it.
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70 pb-[env(safe-area-inset-bottom)] print:hidden">
       <ul className="mx-auto flex max-w-md items-end justify-around px-2">
         {tabs.map(({ label, icon: Icon, href, fab }) => {
           const active = pathname === href;

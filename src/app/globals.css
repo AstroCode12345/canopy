@@ -126,25 +126,32 @@ body {
   background-size: 26px 26px;
 }
 
-/* Print isolation for the allergen card (src/app/card/page.tsx): hide
-   everything on the page except the card itself, so what comes out of the
-   printer is just the card, not the app chrome around it. Standard
-   visibility-swap trick — display:none would work too, but visibility
-   preserves layout so the isolated element doesn't reflow at print time. */
+/* Print rules for the allergen card (src/app/card/page.tsx). */
 @media print {
-  body * {
-    visibility: hidden;
+  /* The card is the only thing that should reach paper. App chrome hides
+     itself with Tailwind's print:hidden at the component level rather than
+     being masked from here.
+
+     That matters: this used to be `visibility: hidden` on everything plus
+     `position: absolute; inset: 0` on the card. Absolute positioning with a
+     pinned bottom clips whatever does not fit on page one, which was
+     invisible while the card held a single language and broke as soon as it
+     held several. Leaving the card in normal document flow lets it run onto
+     as many pages as it needs. */
+  @page {
+    margin: 14mm;
   }
-  #allergen-card-print,
-  #allergen-card-print * {
-    visibility: visible;
-  }
+
   #allergen-card-print {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    margin: 0;
-    box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  /* Never split one language's block across a page boundary: half a
+     sentence at the foot of a page is worse than a shorter page. */
+  .card-lang-block {
+    break-inside: avoid;
   }
 }

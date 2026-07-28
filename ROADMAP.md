@@ -76,12 +76,26 @@ nurse, a host, or to carry while traveling abroad, translated. Low effort
 since the data already exists, real utility for the exact people this app is
 for. Greenlit 2026-07-13 as the next build after barcode stage 1.
 
-Shipped at `/card`, linked from the profile page: the nine preset allergens
-translated across the same six languages the scan pipeline verifies, print
-isolation so a phone print gives just the card, and custom allergens rendered
-in English with a visible "(EN)" mark rather than a guessed translation. The
-AI alias expansion below is what would eventually give custom allergens real
+Shipped at `/card`, linked from the profile page. Custom allergens render in
+English with a visible "(EN)" mark rather than a guessed translation. The AI
+alias expansion below is what would eventually give custom allergens real
 translations.
+
+Reworked 2026-07-28: 22 languages instead of six, several at once on one
+card instead of one at a time, and a deliberately plain layout. Three things
+worth keeping in mind if this gets touched again:
+
+- The card's language list is intentionally decoupled from the scan
+  pipeline's verified six. Reading a label and handing someone a card are
+  different jobs with different risk: OCR and mistranslation traps do not
+  apply to a printed sentence a person reads directly.
+- The card is black on white with no colour fills, on purpose. Most people
+  print in grayscale, where white text on a red chip becomes low-contrast
+  mush, and this is a document read across a counter in bad light. Hierarchy
+  comes from weight and size instead.
+- Each language carries a full sentence ("I have a serious food allergy. I
+  cannot eat:"), not just allergen words. A bare list reads as a preference;
+  the sentence reads as a medical fact.
 
 ### Quick allergen, one scan only (Taymour's idea, built 2026-07-24)
 Add an allergen at scan time that checks only that scan and never touches the

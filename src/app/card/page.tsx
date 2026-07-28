@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Leaf, Printer, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Printer, ShieldAlert } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { getAllergensDb } from "@/lib/db";
 import type { Allergen } from "@/lib/storage";
@@ -15,10 +15,10 @@ import {
   type CardLanguage,
 } from "@/lib/allergenTranslations";
 
-/** Renders one allergen's chip text: the real translation for a preset
- * label, or the original English with an EN mark for anything Canopy
- * doesn't have a vetted translation for (see allergenTranslations.ts). */
-function chipText(allergen: Allergen, lang: CardLanguage): string {
+/** One allergen's text: the real translation for a preset label, or the
+ * original English with an EN mark for anything Canopy has no vetted
+ * translation for (see allergenTranslations.ts). */
+function nameFor(allergen: Allergen, lang: CardLanguage): string {
   if (isTranslatablePreset(allergen.label)) {
     return translateAllergenLabel(allergen.label, lang);
   }
@@ -29,7 +29,9 @@ export default function AllergenCardPage() {
   const { supabase, user } = useProfile();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const [lang, setLang] = useState<CardLanguage>("en");
+  const [selected, setSelected] = useState<Set<CardLanguage>>(
+    () => new Set<CardLanguage>(["en"]),
+  );
 
   useEffect(() => {
     if (!user) return; // wait for auth to resolve before fetching
@@ -44,14 +46,28 @@ export default function AllergenCardPage() {
     };
   }, [supabase, user]);
 
-  const copy = CARD_COPY[lang];
+  const toggle = (code: CardLanguage) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+
+  // Always render in CARD_LANGUAGES order, never in the order they were
+  // tapped, so the same picks always produce the same card.
+  const chosen = useMemo(
+    () => CARD_LANGUAGES.filter((l) => selected.has(l.code)),
+    [selected],
+  );
+
   const severe = allergens.filter((a) => a.severity === "allergy");
   const mild = allergens.filter((a) => a.severity === "intolerance");
   const hasCustom = allergens.some((a) => !isTranslatablePreset(a.label));
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="px-6 pt-10 pb-2">
+      <header className="px-6 pt-10 pb-2 print:hidden">
         <Link
           href="/profile"
           className="mb-3 inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
@@ -59,11 +75,10 @@ export default function AllergenCardPage() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Allergen card
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Allergen card</h1>
         <p className="mt-1 text-sm text-muted">
-          Hand this to a waiter, a host, or a school nurse.
+          Pick every language you might need, then hand this to a waiter, a
+          host, or a school nurse.
         </p>
       </header>
 
@@ -95,101 +110,132 @@ export default function AllergenCardPage() {
 
         {hydrated && allergens.length > 0 && (
           <div className="space-y-5">
-            <div>
-              <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
-                Language
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {CARD_LANGUAGES.map(({ code, nativeName }) => (
+            {/* Picker (app chrome, never printed) */}
+            <div className="print:hidden">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+                  Languages · {chosen.length}
+                </h2>
+                <div className="flex gap-3 text-[13px]">
                   <button
-                    key={code}
                     type="button"
-                    onClick={() => setLang(code)}
-                    aria-pressed={lang === code}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                      lang === code
-                        ? "bg-accent text-white"
-                        : "bg-card text-foreground ring-1 ring-border hover:ring-accent/40"
-                    }`}
+                    onClick={() =>
+                      setSelected(new Set(CARD_LANGUAGES.map((l) => l.code)))
+                    }
+                    className="font-medium text-accent"
                   >
-                    {nativeName}
+                    Select all
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setSelected(new Set<CardLanguage>(["en"]))}
+                    className="font-medium text-muted transition-colors hover:text-foreground"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {CARD_LANGUAGES.map(({ code, nativeName, englishName }) => {
+                  const on = selected.has(code);
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => toggle(code)}
+                      aria-pressed={on}
+                      // englishName in the label so someone can find a
+                      // language whose own script they cannot read.
+                      aria-label={`${englishName}${on ? ", selected" : ""}`}
+                      title={englishName}
+                      className={`rounded-full px-3.5 py-2 text-sm font-medium transition-all active:scale-95 ${
+                        on
+                          ? "bg-accent text-white"
+                          : "bg-card text-foreground ring-1 ring-border hover:ring-accent/40"
+                      }`}
+                    >
+                      {nativeName}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* This element and everything inside it is the only thing
-                that survives the print stylesheet (globals.css). */}
+            {/* The card itself. Deliberately plain: black on white, no
+                colour fills, hierarchy carried by weight and size. Most
+                people print on a grayscale printer, where white text on a
+                red chip turns into low-contrast mush, and this is a document
+                someone has to read across a counter in bad light. */}
             <div
               id="allergen-card-print"
-              className="rounded-3xl border border-border bg-card p-7 shadow-soft"
+              className="rounded-3xl border border-border bg-white p-6 text-[#111] shadow-soft"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-2xl font-bold tracking-tight">
-                    {copy.title}
-                  </h2>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">
-                    {copy.intro}
-                  </p>
-                </div>
-                <span className="mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1.5">
-                  <Leaf className="h-3 w-3 text-accent" strokeWidth={2.25} />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-                    Canopy
-                  </span>
-                </span>
+              <div className="flex items-baseline justify-between gap-3 border-b border-[#111]/15 pb-3">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">
+                  Allergen card
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#111]/45">
+                  Canopy
+                </p>
               </div>
 
-              {severe.length > 0 && (
-                <section className="mt-6">
-                  <h3 className="text-xs font-bold uppercase tracking-wide text-danger">
-                    {copy.severeHeading}
-                  </h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {severe.map((a) => (
-                      <span
-                        key={a.id}
-                        className="rounded-full bg-danger px-4 py-2 text-base font-semibold text-white"
-                      >
-                        {chipText(a, lang)}
-                      </span>
-                    ))}
-                  </div>
-                </section>
+              {chosen.length === 0 && (
+                <p className="py-6 text-center text-sm text-[#111]/50">
+                  Pick at least one language above.
+                </p>
               )}
 
-              {mild.length > 0 && (
-                <section className="mt-5">
-                  <h3 className="text-xs font-bold uppercase tracking-wide text-warning">
-                    {copy.mildHeading}
-                  </h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {mild.map((a) => (
-                      <span
-                        key={a.id}
-                        className="rounded-full bg-warning-soft px-4 py-2 text-base font-semibold text-warning-ink ring-1 ring-warning/30"
-                      >
-                        {chipText(a, lang)}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-              )}
+              {chosen.map(({ code, nativeName, rtl }) => {
+                const copy = CARD_COPY[code];
+                return (
+                  <section
+                    key={code}
+                    dir={rtl ? "rtl" : undefined}
+                    lang={code}
+                    className={`card-lang-block border-b border-[#111]/10 py-4 last:border-b-0 last:pb-0 ${
+                      rtl ? "text-right" : ""
+                    }`}
+                  >
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#111]/45">
+                      {nativeName}
+                    </p>
 
-              {hasCustom && lang !== "en" && (
-                <p className="mt-5 text-xs text-faint">{copy.customLegend}</p>
-              )}
+                    {severe.length > 0 && (
+                      <>
+                        <p className="mt-1.5 text-[13px] leading-snug">
+                          {copy.severeLead}
+                        </p>
+                        <p className="mt-1 text-[19px] font-bold leading-tight">
+                          {severe.map((a) => nameFor(a, code)).join(" · ")}
+                        </p>
+                      </>
+                    )}
 
-              <p className="mt-7 border-t border-border pt-4 text-center text-xs text-muted">
-                {copy.disclaimer}
-              </p>
+                    {mild.length > 0 && (
+                      <>
+                        <p className="mt-2.5 text-[13px] leading-snug text-[#111]/70">
+                          {copy.mildLead}
+                        </p>
+                        <p className="mt-0.5 text-[15px] font-semibold leading-tight text-[#111]/80">
+                          {mild.map((a) => nameFor(a, code)).join(" · ")}
+                        </p>
+                      </>
+                    )}
+
+                    {hasCustom && code !== "en" && (
+                      <p className="mt-2 text-[11px] text-[#111]/45">
+                        {copy.customNote}
+                      </p>
+                    )}
+                  </section>
+                );
+              })}
             </div>
 
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3.5 text-base font-semibold text-white shadow-soft transition active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3.5 text-base font-semibold text-white shadow-soft transition active:scale-[0.99] print:hidden"
             >
               <Printer className="h-4 w-4" />
               Print or save as PDF
