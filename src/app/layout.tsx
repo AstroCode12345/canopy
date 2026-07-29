@@ -1,15 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Schibsted_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Archivo, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { PageShell } from "@/components/PageShell";
 import "./globals.css";
 
-const sans = Schibsted_Grotesk({
-  variable: "--font-schibsted",
+// Three families, per the 2a visual refresh handoff:
+//   Archivo        headings
+//   Manrope        body copy, labels, buttons
+//   IBM Plex Mono  uppercase eyebrows/captions and numeric stats
+// Archivo and Manrope are variable fonts, so they need no weight list. IBM
+// Plex Mono is not, so its weights are named explicitly.
+const display = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
 });
 
-const mono = JetBrains_Mono({
-  variable: "--font-jetbrains",
+const sans = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const mono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  weight: ["500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -40,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${mono.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-dvh bg-background text-foreground flex flex-col">
         <PageShell>{children}</PageShell>

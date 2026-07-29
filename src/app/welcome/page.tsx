@@ -13,7 +13,7 @@ export default function WelcomePage() {
               aria-hidden
               className="absolute inset-0 -z-10 rounded-full bg-accent/35 blur-xl motion-safe:[animation:var(--animate-halo)]"
             />
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent shadow-[0_16px_32px_-10px_rgb(28_122_83/0.55)]">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent shadow-[0_16px_32px_-10px_rgb(28_122_83/0.55)]">
               <Leaf className="h-7 w-7 text-white" strokeWidth={2} />
             </span>
           </span>

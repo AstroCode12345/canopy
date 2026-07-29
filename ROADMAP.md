@@ -150,10 +150,22 @@ rather than "allergen flagged"), so it deserves its own section in the
 profile UI and its own reference table in the scan prompt rather than being
 stuffed into the allergens list.
 
-A visual redesign is also on Taymour's mind (flagged 2026-07-13, direction
-TBD). Any restyle should run the design-pass skill first and keep the
-result-card information hierarchy intact, since its severity tiers are part
-of the safety design, not just styling.
+The visual redesign flagged 2026-07-13 shipped 2026-07-28 as the "2a" refresh,
+from a design handoff (README + static HTML reference). Near-white surfaces,
+a richer emerald accent, pill-shaped controls, and a three-family type stack
+(Archivo headings, Manrope body, IBM Plex Mono eyebrows and stats). Applied
+by updating the `@theme` tokens in place so it propagated to every screen
+rather than being painted on per component.
+
+Two decisions from that pass worth not undoing:
+
+- The result card keeps its Severe and Mild rows separate, even though the
+  mock showed a single flat row of pills. The mock's version tells you how
+  many of each there are but not which allergen is which tier, and the
+  severity tiers are part of the safety design rather than styling.
+- "Unreadable" keeps a neutral band while every other verdict got a solid
+  status colour. It is not a safety verdict, so it must not borrow green,
+  red, or amber.
 
 ## Deliberately not planning, and why
 

@@ -25,11 +25,13 @@ import {
 } from "@/lib/storage";
 import { useProfile } from "@/lib/useProfile";
 
+// Status colour now drives a 3px left border on the row plus the bare outline
+// icon, rather than a tinted circular icon badge (2a refresh).
 function recentVisuals(scan: Scan) {
   const sev = resultVerdict(scan.result);
   if (sev === "unreadable") {
     return {
-      iconBg: "bg-foreground/[0.06]",
+      edge: "border-l-border-strong",
       Icon: ImageOff,
       iconColor: "text-muted",
       summary: "Couldn't read the label. Scan it again",
@@ -38,7 +40,7 @@ function recentVisuals(scan: Scan) {
   }
   if (sev === "allergy") {
     return {
-      iconBg: "bg-danger-soft",
+      edge: "border-l-danger",
       Icon: AlertTriangle,
       iconColor: "text-danger",
       summary:
@@ -50,7 +52,7 @@ function recentVisuals(scan: Scan) {
   }
   if (sev === "intolerance") {
     return {
-      iconBg: "bg-warning-soft",
+      edge: "border-l-warning",
       Icon: AlertCircle,
       iconColor: "text-warning",
       summary: `Be aware: ${scan.result.flaggedIntolerances.join(", ")}`,
@@ -58,7 +60,7 @@ function recentVisuals(scan: Scan) {
     };
   }
   return {
-    iconBg: "bg-accent-soft",
+    edge: "border-l-accent",
     Icon: ShieldCheck,
     iconColor: "text-accent",
     summary: "No allergens detected",
@@ -126,59 +128,87 @@ export default function HomePage() {
   };
 
   return (
-    <div className="hero-bg flex min-h-dvh flex-col">
-      <header className="mx-auto w-full max-w-md px-6 pt-12">
+    <div className="flex min-h-dvh flex-col">
+      <header className="mx-auto w-full max-w-md px-5 pt-12">
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+            <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] text-faint">
               {meta.date || " "}
             </p>
-            <h1 className="mt-1.5 text-[1.9rem] font-bold leading-tight tracking-tight">
+            <h1 className="mt-2 text-[27px] font-extrabold leading-[1.15]">
               {meta.greet || "Welcome"}
               {profile?.display_name
                 ? `, ${profile.display_name.trim().split(/\s+/)[0]}`
                 : ""}
             </h1>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5">
-            <Leaf className="h-3.5 w-3.5 text-accent" strokeWidth={2.25} />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft py-[7px] pl-2 pr-3">
+            <Leaf className="h-[13px] w-[13px] text-accent-ink" strokeWidth={2.2} />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-ink">
               Canopy
             </span>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 space-y-4 px-6 pb-28 pt-6">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-[18px] px-5 pb-28 pt-5">
         {/* Primary scan CTA */}
         <Link
           href="/scan"
-          className="group flex items-center gap-4 rounded-3xl bg-accent p-5 text-white shadow-[0_16px_30px_-14px_rgb(28_122_83/0.55)] transition-transform active:scale-[0.99]"
+          className="group flex items-center gap-[13px] rounded-[20px] bg-accent p-[17px] text-white shadow-cta transition-transform active:scale-[0.99]"
         >
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-black/15">
-            <Camera className="h-7 w-7" strokeWidth={1.75} />
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.18]">
+            <Camera className="h-[21px] w-[21px]" strokeWidth={1.8} />
           </span>
-          <span className="flex-1">
-            <span className="block text-lg font-bold tracking-tight">
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-[15.5px] font-bold leading-tight">
               Scan a label
             </span>
-            <span className="mt-0.5 block text-sm text-white/85">
+            <span className="mt-0.5 block text-xs font-medium text-white/[0.82]">
               Point at the ingredients panel
             </span>
           </span>
-          <ChevronRight className="h-5 w-5 text-white/80 transition-transform group-hover:translate-x-0.5" />
+          <ChevronRight className="h-[15px] w-[15px] shrink-0 text-white/75 transition-transform group-hover:translate-x-0.5" />
         </Link>
 
+        {/* Stats. The first cell sits on an inset surface-2 tile. */}
+        <section className="flex rounded-[18px] border border-border bg-card p-1">
+          <div className="m-0.5 flex flex-1 flex-col items-center gap-0.5 rounded-[14px] bg-surface-2 px-2 py-[13px]">
+            <span className="font-mono text-xl font-semibold tabular-nums">
+              {hydrated ? stats.scanned : "—"}
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.06em] text-faint">
+              Scanned
+            </span>
+          </div>
+          <div className="m-0.5 flex flex-1 flex-col items-center gap-0.5 px-2 py-[13px]">
+            <span className="font-mono text-xl font-semibold tabular-nums text-danger">
+              {hydrated ? stats.flagged : "—"}
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.06em] text-faint">
+              Flagged
+            </span>
+          </div>
+          <div className="m-0.5 flex flex-1 flex-col items-center gap-0.5 px-2 py-[13px]">
+            <span className="font-mono text-xl font-semibold tabular-nums text-accent-ink">
+              {hydrated ? allergens.length : "—"}
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.06em] text-faint">
+              Watching
+            </span>
+          </div>
+        </section>
+
         {/* Watching for */}
-        <section className="rounded-3xl border border-border bg-card p-5 shadow-soft">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+        <section>
+          <div className="mb-[9px] flex items-center justify-between">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-faint">
               Watching for
               {hydrated && allergens.length > 0 ? ` · ${allergens.length}` : ""}
             </p>
             <Link
               href="/profile"
-              className="text-xs font-semibold text-accent hover:underline"
+              className="text-[11.5px] font-bold text-accent-ink hover:underline"
             >
               Manage
             </Link>
@@ -186,16 +216,16 @@ export default function HomePage() {
 
           {!hydrated && (
             <div className="flex gap-2" aria-hidden>
-              <span className="h-8 w-20 animate-pulse rounded-full bg-background" />
-              <span className="h-8 w-16 animate-pulse rounded-full bg-background" />
-              <span className="h-8 w-24 animate-pulse rounded-full bg-background" />
+              <span className="h-8 w-20 animate-pulse rounded-full bg-surface-2" />
+              <span className="h-8 w-16 animate-pulse rounded-full bg-surface-2" />
+              <span className="h-8 w-24 animate-pulse rounded-full bg-surface-2" />
             </div>
           )}
 
           {hydrated && allergens.length === 0 && (
             <Link
               href="/profile"
-              className="flex items-center justify-between rounded-2xl bg-accent-soft px-4 py-3 text-sm font-semibold text-accent"
+              className="flex items-center justify-between rounded-[14px] bg-accent-soft px-4 py-3 text-sm font-bold text-accent-ink"
             >
               Set up your allergens
               <ArrowRight className="h-4 w-4" />
@@ -203,11 +233,11 @@ export default function HomePage() {
           )}
 
           {hydrated && allergens.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-[7px]">
               {allergens.slice(0, 6).map((a) => (
                 <span
                   key={a.id}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1.5 text-[13px] font-medium ring-1 ring-border"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-card px-3 py-[7px] text-xs font-semibold"
                 >
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${
@@ -218,7 +248,7 @@ export default function HomePage() {
                 </span>
               ))}
               {allergens.length > 6 && (
-                <span className="inline-flex items-center rounded-full bg-background px-3 py-1.5 text-[13px] font-medium text-muted ring-1 ring-border">
+                <span className="inline-flex items-center rounded-full border border-border-strong bg-card px-3 py-[7px] text-xs font-semibold text-faint">
                   +{allergens.length - 6}
                 </span>
               )}
@@ -226,38 +256,14 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Stats */}
-        <section className="grid grid-cols-3 rounded-3xl border border-border bg-card shadow-soft">
-          <div className="flex flex-col items-center gap-1 py-4">
-            <span className="font-mono text-2xl font-semibold tabular-nums">
-              {hydrated ? stats.scanned : "—"}
-            </span>
-            <span className="text-[11px] font-medium text-muted">Scanned</span>
-          </div>
-          <div className="flex flex-col items-center gap-1 border-l border-border py-4">
-            <span className="font-mono text-2xl font-semibold tabular-nums text-danger">
-              {hydrated ? stats.flagged : "—"}
-            </span>
-            <span className="text-[11px] font-medium text-muted">Flagged</span>
-          </div>
-          <div className="flex flex-col items-center gap-1 border-l border-border py-4">
-            <span className="font-mono text-2xl font-semibold tabular-nums text-accent">
-              {hydrated ? allergens.length : "—"}
-            </span>
-            <span className="text-[11px] font-medium text-muted">Watching</span>
-          </div>
-        </section>
-
         {/* Recent scans */}
         <section>
-          <div className="mb-3 flex items-center justify-between px-1">
-            <h2 className="text-sm font-semibold text-foreground">
-              Recent scans
-            </h2>
+          <div className="mb-[9px] flex items-center justify-between">
+            <h2 className="font-display text-[13px] font-bold">Recent scans</h2>
             {recent.length > 0 && (
               <Link
                 href="/history"
-                className="text-xs font-semibold text-accent hover:underline"
+                className="text-[11.5px] font-bold text-accent-ink hover:underline"
               >
                 See all
               </Link>
@@ -266,8 +272,8 @@ export default function HomePage() {
 
           {!hydrated && (
             <ul className="space-y-2" aria-hidden>
-              <li className="h-[60px] animate-pulse rounded-2xl border border-border bg-card" />
-              <li className="h-[60px] animate-pulse rounded-2xl border border-border bg-card/60" />
+              <li className="h-[60px] animate-pulse rounded-[16px] border border-border bg-card" />
+              <li className="h-[60px] animate-pulse rounded-[16px] border border-border bg-card/60" />
             </ul>
           )}
 
@@ -282,20 +288,21 @@ export default function HomePage() {
                   <li key={scan.id}>
                     <Link
                       href="/history"
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition-colors hover:border-accent/40"
+                      className={`flex items-center gap-[11px] rounded-[16px] border border-l-[3px] border-border bg-card px-[13px] py-[11px] transition-colors hover:border-accent/40 ${v.edge}`}
                     >
-                      <div className={`shrink-0 rounded-full p-2 ${v.iconBg}`}>
-                        <Icon className={`h-4 w-4 ${v.iconColor}`} />
-                      </div>
+                      <Icon
+                        className={`h-4 w-4 shrink-0 ${v.iconColor}`}
+                        strokeWidth={1.8}
+                      />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
+                        <p className="truncate text-[13.5px] font-semibold">
                           {scan.foodName || v.fallbackTitle}
                         </p>
-                        <p className="truncate text-xs text-muted">
+                        <p className="truncate text-[11.5px] text-muted">
                           {v.summary}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted" />
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-faint" />
                     </Link>
                   </li>
                 );
@@ -304,10 +311,10 @@ export default function HomePage() {
           )}
         </section>
 
-        <div className="pt-2 text-center">
+        <div className="pt-0.5 text-center">
           <Link
             href="/disclaimer"
-            className="text-xs font-medium text-muted underline-offset-2 hover:text-foreground hover:underline"
+            className="text-[11.5px] font-semibold text-faint underline underline-offset-2 hover:text-foreground"
           >
             About Canopy &amp; safety
           </Link>

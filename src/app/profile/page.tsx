@@ -46,27 +46,29 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="px-6 pt-10 pb-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Your profile</h1>
-        <p className="mt-1 text-sm text-muted">
+      <header className="px-5 pb-4 pt-10">
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">Your profile</h1>
+        <p className="mt-1.5 text-[12.5px] font-medium leading-snug text-muted">
           The allergens Canopy watches for in every scan.
         </p>
       </header>
 
-      <main className="flex-1 px-6 pt-4 pb-44">
+      <main className="flex-1 px-5 pb-44 pt-0">
         {user && (
-          <div className="mb-6 flex items-center gap-3.5 rounded-3xl border border-border bg-card p-4 shadow-soft">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-lg font-bold text-white">
+          <div className="mb-4 flex items-center gap-3 rounded-[18px] border border-border bg-card p-[13px]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent font-display text-[15px] font-bold text-white">
               {(profile?.display_name ?? user.email ?? "?")
                 .trim()
                 .charAt(0)
                 .toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-semibold">
+              <p className="truncate font-display text-[13px] font-bold leading-snug">
                 {profile?.display_name ?? "Your account"}
               </p>
-              <p className="truncate text-[13px] text-muted">{user.email}</p>
+              <p className="truncate text-[11.5px] leading-snug text-muted">
+                {user.email}
+              </p>
             </div>
           </div>
         )}
@@ -79,7 +81,7 @@ export default function ProfilePage() {
           <div className="pt-6 text-center">
             <Link
               href="/card"
-              className="text-sm font-semibold text-accent hover:underline"
+              className="text-[12.5px] font-bold text-accent-ink hover:underline"
             >
               Get a printable allergen card
             </Link>
@@ -101,7 +103,7 @@ export default function ProfilePage() {
           type="button"
           onClick={handleSave}
           disabled={!hydrated || saving}
-          className="pointer-events-auto flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-base font-semibold text-white shadow-soft transition-opacity disabled:opacity-40"
+          className="pointer-events-auto flex w-full items-center justify-center gap-2 rounded-full bg-accent py-[13px] font-display text-sm font-bold text-white transition-opacity disabled:opacity-40"
         >
           {savedFlash ? (
             <>

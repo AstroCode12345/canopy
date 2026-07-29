@@ -20,7 +20,7 @@ export default function ChangePasswordPage() {
           <ArrowLeft className="h-4 w-4" />
           Settings
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">
           Change password
         </h1>
         <p className="mt-1 text-sm text-muted">

@@ -29,39 +29,34 @@ export function ScanResultCard({ result }: Props) {
   // Per-verdict visual tokens. "unreadable" is deliberately neutral: it is
   // not a safety verdict, so it must not borrow green (clear), red (avoid),
   // or amber (be aware).
+  // 2a refresh: the band is a SOLID status colour with white content, not a
+  // soft tint with coloured text. "unreadable" stays deliberately neutral —
+  // it is not a safety verdict, so it must not borrow green, red or amber.
   const visuals =
     verdict === "allergy"
       ? {
-          bg: "bg-danger-soft",
-          iconBg: "bg-danger text-white",
+          band: "bg-danger",
           title: "Avoid this",
-          titleColor: "text-danger",
-          sub: `${flaggedAllergies.length} severe${flaggedIntolerances.length ? ` + ${flaggedIntolerances.length} mild` : ""} flagged`,
+          sub: `${flaggedAllergies.length} severe${flaggedIntolerances.length ? ` · ${flaggedIntolerances.length} mild` : ""} flagged`,
           Icon: AlertTriangle,
         }
       : verdict === "intolerance"
         ? {
-            bg: "bg-warning-soft",
-            iconBg: "bg-warning text-white",
+            band: "bg-warning",
             title: "Be aware",
-            titleColor: "text-warning",
             sub: `${flaggedIntolerances.length} mild flagged`,
             Icon: AlertCircle,
           }
         : verdict === "unreadable"
           ? {
-              bg: "bg-foreground/[0.06]",
-              iconBg: "bg-muted text-white",
+              band: "bg-muted",
               title: "Couldn't read this label",
-              titleColor: "text-foreground",
-              sub: "Not a safety check. Retake the photo",
+              sub: "Not a safety check · retake the photo",
               Icon: ImageOff,
             }
           : {
-              bg: "bg-accent-soft",
-              iconBg: "bg-accent text-white",
+              band: "bg-accent",
               title: "Looks safe for you",
-              titleColor: "text-accent",
               sub: "No matches in your allergen list",
               Icon: ShieldCheck,
             };
@@ -69,55 +64,51 @@ export function ScanResultCard({ result }: Props) {
   const Icon = visuals.Icon;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft motion-safe:[animation:var(--animate-fade-in)]">
-      <div className={`px-6 py-6 ${visuals.bg}`}>
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${visuals.iconBg}`}
-          >
-            <Icon className="h-6 w-6" strokeWidth={2} />
+    <div className="overflow-hidden rounded-[20px] border border-border bg-card motion-safe:[animation:var(--animate-fade-in)]">
+      <div className={`p-[19px] text-white ${visuals.band}`}>
+        <div className="flex items-center gap-[11px]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.18]">
+            <Icon className="h-[21px] w-[21px]" strokeWidth={1.8} />
           </div>
           <div className="min-w-0">
-            <p
-              className={`text-lg font-semibold leading-tight ${visuals.titleColor}`}
-            >
+            <p className="font-display text-[17px] font-extrabold leading-tight">
               {visuals.title}
             </p>
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-wider text-foreground/60">
+            <p className="mt-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-white/70">
               {visuals.sub}
             </p>
           </div>
         </div>
 
         {total > 0 && (
-          <div className="mt-4 space-y-2">
+          <div className="mt-[15px] space-y-2">
             {flaggedAllergies.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-danger">
+              <div className="flex flex-wrap items-center gap-[7px]">
+                <span className="font-mono text-[9.5px] font-bold uppercase tracking-[0.08em] text-white/70">
                   Severe
                 </span>
                 {flaggedAllergies.map((allergen) => (
                   <span
                     key={`a-${allergen}`}
-                    className="inline-flex items-center gap-1 rounded-full bg-danger/15 px-3 py-1 text-sm font-medium text-danger ring-1 ring-danger/25"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.16] px-3 py-1.5 text-[11.5px] font-semibold text-white"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-danger" />
+                    <span className="h-[5px] w-[5px] rounded-full bg-white" />
                     {allergen}
                   </span>
                 ))}
               </div>
             )}
             {flaggedIntolerances.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-warning">
+              <div className="flex flex-wrap items-center gap-[7px]">
+                <span className="font-mono text-[9.5px] font-bold uppercase tracking-[0.08em] text-white/70">
                   Mild
                 </span>
                 {flaggedIntolerances.map((allergen) => (
                   <span
                     key={`i-${allergen}`}
-                    className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-3 py-1 text-sm font-medium text-warning ring-1 ring-warning/30"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.16] px-3 py-1.5 text-[11.5px] font-semibold text-white"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                    <span className="h-[5px] w-[5px] rounded-full bg-white/60 ring-1 ring-white/70" />
                     {allergen}
                   </span>
                 ))}
@@ -127,55 +118,55 @@ export function ScanResultCard({ result }: Props) {
         )}
       </div>
 
-      <div className="space-y-5 p-6">
+      <div className="flex flex-col gap-4 bg-card p-[19px]">
         {advisories.length > 0 && (
-          <div className="rounded-2xl bg-warning-soft p-4 ring-1 ring-warning/20">
-            <div className="flex items-start gap-2.5">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-              <div className="min-w-0 flex-1">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-warning">
-                  Cross-contact warning{advisories.length > 1 ? "s" : ""}
-                </h4>
-                <ul className="mt-1.5 space-y-1.5">
-                  {advisories.map((adv, i) => (
-                    <li
-                      key={`${adv.allergen}-${i}`}
-                      className="text-sm leading-snug text-foreground"
-                    >
-                      <span className="font-medium">{adv.allergen}</span>
-                      <span className="text-muted">: &ldquo;{adv.phrase}&rdquo;</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+          <div className="rounded-[14px] bg-warning-soft px-3.5 py-3">
+            <h4 className="mb-1.5 font-mono text-[9.5px] font-bold uppercase tracking-[0.08em] text-warning-ink">
+              Cross-contact warning{advisories.length > 1 ? "s" : ""}
+            </h4>
+            <ul className="space-y-1.5">
+              {advisories.map((adv, i) => (
+                <li
+                  key={`${adv.allergen}-${i}`}
+                  className="text-[12.5px] leading-snug"
+                >
+                  <span className="font-bold">{adv.allergen}</span>
+                  <span className="text-muted">
+                    {" "}
+                    &mdash; &ldquo;{adv.phrase}&rdquo;
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
         <div>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+          <h4 className="mb-1.5 font-mono text-[9.5px] font-bold uppercase tracking-[0.08em] text-faint">
             What we found
           </h4>
-          <p className="text-sm leading-relaxed text-foreground">{reasoning}</p>
+          <p className="text-[12.5px] font-medium leading-[1.55]">{reasoning}</p>
         </div>
 
         {ingredients.length > 0 && (
           <div>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+            <h4 className="mb-1.5 font-mono text-[9.5px] font-bold uppercase tracking-[0.08em] text-faint">
               All ingredients detected
             </h4>
-            <p className="text-sm leading-relaxed text-foreground">
+            {/* Mono here on purpose: it reads as transcribed-from-the-label
+                rather than as prose Canopy wrote. */}
+            <p className="font-mono text-[11.5px] leading-[1.6] text-muted">
               {ingredients.join(", ")}
             </p>
           </div>
         )}
 
-        <p className="border-t border-border pt-4 text-xs text-muted">
+        <p className="border-t border-border pt-3.5 text-[11.5px] leading-relaxed text-faint">
           Canopy can miss things. Always double-check the label yourself before
           eating.{" "}
           <Link
             href="/disclaimer"
-            className="font-medium text-accent underline-offset-2 hover:underline"
+            className="font-bold text-accent underline-offset-2 hover:underline"
           >
             Why?
           </Link>

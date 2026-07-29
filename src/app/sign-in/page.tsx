@@ -162,7 +162,7 @@ function SignInForm() {
     return (
       <div className="hero-bg flex min-h-dvh flex-col bg-background">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent">
             <MailCheck className="h-7 w-7" strokeWidth={1.75} />
           </span>
           <h1 className="mt-5 text-[1.6rem] font-bold tracking-tight">
@@ -205,10 +205,10 @@ function SignInForm() {
         </Link>
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col pt-7">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent shadow-soft">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent shadow-soft">
             <Leaf className="h-5.5 w-5.5 text-white" strokeWidth={2} />
           </span>
-          <h1 className="mt-4.5 text-[1.9rem] font-bold leading-tight tracking-tight">
+          <h1 className="mt-4.5 text-[25px] font-extrabold leading-[1.15]">
             {heading}
           </h1>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">{sub}</p>

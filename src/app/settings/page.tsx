@@ -90,7 +90,7 @@ export default function SettingsPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto w-full max-w-md px-6 pt-12">
-        <h1 className="text-[1.9rem] font-bold leading-tight tracking-tight">
+        <h1 className="text-[25px] font-extrabold leading-[1.15]">
           Settings
         </h1>
       </header>
@@ -101,9 +101,9 @@ export default function SettingsPage() {
           <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
             Account
           </p>
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+          <div className="overflow-hidden rounded-[20px] border border-border bg-card shadow-soft">
             <div className="flex items-center gap-3.5 px-5 py-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-base font-bold text-white">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-base font-bold text-white">
                 {(profile?.display_name ?? user?.email ?? "?")
                   .trim()
                   .charAt(0)
@@ -124,7 +124,7 @@ export default function SettingsPage() {
               onClick={handleSignOut}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-danger-soft"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
                 <LogOut className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <p className="text-[15px] font-medium text-danger">Sign out</p>
@@ -137,12 +137,12 @@ export default function SettingsPage() {
           <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
             Security
           </p>
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+          <div className="overflow-hidden rounded-[20px] border border-border bg-card shadow-soft">
             <Link
               href="/change-password"
               className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-surface-2"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-muted">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
                 <KeyRound className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="flex-1">
@@ -161,9 +161,9 @@ export default function SettingsPage() {
           <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
             Scanning
           </p>
-          <div className="rounded-3xl border border-border bg-card p-5 shadow-soft">
+          <div className="rounded-[20px] border border-border bg-card p-5 shadow-soft">
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-soft text-warning">
                 <ShieldAlert className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="min-w-0 flex-1">
@@ -201,14 +201,14 @@ export default function SettingsPage() {
           <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
             Your data
           </p>
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+          <div className="overflow-hidden rounded-[20px] border border-border bg-card shadow-soft">
             <button
               type="button"
               onClick={exportHistory}
               disabled={!hydrated || scanCount === 0}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-surface-2 disabled:opacity-40"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-muted">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
                 <Download className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="flex-1">
@@ -228,7 +228,7 @@ export default function SettingsPage() {
               disabled={!hydrated || scanCount === 0}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-danger-soft disabled:opacity-40"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
                 <Trash2 className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="flex-1">
@@ -244,7 +244,7 @@ export default function SettingsPage() {
               onClick={() => setDeleteOpen(true)}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-danger-soft"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
                 <UserX className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="flex-1">
@@ -268,12 +268,12 @@ export default function SettingsPage() {
           <p className="mb-2 px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
             About
           </p>
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+          <div className="overflow-hidden rounded-[20px] border border-border bg-card shadow-soft">
             <Link
               href="/disclaimer"
               className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-surface-2"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
                 <LifeBuoy className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="flex-1">
@@ -289,7 +289,7 @@ export default function SettingsPage() {
               href="/privacy"
               className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-surface-2"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
                 <Lock className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <div className="flex-1">

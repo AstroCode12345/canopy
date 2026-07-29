@@ -369,8 +369,8 @@ export default function ScanPage() {
           </h1>
         </header>
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 pb-28 text-center">
-          <div className="w-full rounded-3xl border border-border bg-card p-6 shadow-soft">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+          <div className="w-full rounded-[20px] border border-border bg-card p-6 shadow-soft">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
               <AlertCircle className="h-6 w-6" />
             </div>
             <p className="font-semibold">Tell Canopy what to flag</p>
@@ -417,7 +417,7 @@ export default function ScanPage() {
           {/* Camera unavailable → photo fallback */}
           {cameraError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10">
                 <Camera className="h-7 w-7 text-white/80" />
               </div>
               <div>
@@ -545,7 +545,7 @@ export default function ScanPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Choose a photo from your library"
-                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.12] backdrop-blur active:scale-95"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.12] backdrop-blur active:scale-95"
               >
                 <Images className="h-5 w-5" />
               </button>
@@ -623,7 +623,7 @@ export default function ScanPage() {
       <main className="mx-auto w-full max-w-md flex-1 space-y-4 px-6 pb-28 pt-5">
         {(status === "preview" || status === "analyzing") && imageDataUrl && (
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-3xl border border-border bg-card">
+            <div className="overflow-hidden rounded-[20px] border border-border bg-card">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageDataUrl}
@@ -700,7 +700,7 @@ export default function ScanPage() {
         )}
 
         {status === "lookup" && (
-          <div className="rounded-3xl border border-border bg-card p-8 text-center">
+          <div className="rounded-[20px] border border-border bg-card p-8 text-center">
             <Loader2 className="mx-auto h-7 w-7 animate-spin text-accent" />
             <p className="mt-3 font-semibold">Looking up this product</p>
             <p className="mt-1 text-sm text-muted">
@@ -713,7 +713,7 @@ export default function ScanPage() {
           <div className="space-y-4">
             {/* Product identity, when the database knows it */}
             {barcodeResult.verdict !== "not_found" && (
-              <div className="flex items-center gap-3 rounded-3xl border border-border bg-card p-4">
+              <div className="flex items-center gap-3 rounded-[20px] border border-border bg-card p-4">
                 {barcodeResult.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -722,7 +722,7 @@ export default function ScanPage() {
                     className="h-14 w-14 shrink-0 rounded-xl bg-background object-cover"
                   />
                 ) : (
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-accent-soft">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent-soft">
                     <ScanBarcode className="h-6 w-6 text-accent" />
                   </div>
                 )}
@@ -743,7 +743,7 @@ export default function ScanPage() {
             )}
 
             {barcodeResult.verdict === "flagged" && (
-              <div className="rounded-3xl border border-danger/20 bg-danger-soft p-5">
+              <div className="rounded-[20px] border border-danger/20 bg-danger-soft p-5">
                 <div className="flex items-center gap-2 text-danger">
                   <AlertTriangle className="h-5 w-5" />
                   <p className="text-lg font-bold">Avoid this</p>
@@ -791,7 +791,7 @@ export default function ScanPage() {
             )}
 
             {barcodeResult.verdict === "no_hits" && (
-              <div className="rounded-3xl border border-border bg-card p-5">
+              <div className="rounded-[20px] border border-border bg-card p-5">
                 <div className="flex items-center gap-2">
                   <Info className="h-5 w-5 text-accent" />
                   <p className="font-semibold">Nothing declared for your list</p>
@@ -806,7 +806,7 @@ export default function ScanPage() {
             )}
 
             {barcodeResult.verdict === "no_data" && (
-              <div className="rounded-3xl border border-border bg-card p-5">
+              <div className="rounded-[20px] border border-border bg-card p-5">
                 <div className="flex items-center gap-2">
                   <SearchX className="h-5 w-5 text-warning" />
                   <p className="font-semibold">No ingredient info on file</p>
@@ -820,7 +820,7 @@ export default function ScanPage() {
             )}
 
             {barcodeResult.verdict === "not_found" && (
-              <div className="rounded-3xl border border-border bg-card p-5">
+              <div className="rounded-[20px] border border-border bg-card p-5">
                 <div className="flex items-center gap-2">
                   <SearchX className="h-5 w-5 text-warning" />
                   <p className="font-semibold">Not in the database yet</p>
@@ -833,7 +833,7 @@ export default function ScanPage() {
             )}
 
             {barcodeResult.ingredients.length > 0 && (
-              <div className="rounded-3xl border border-border bg-card p-5">
+              <div className="rounded-[20px] border border-border bg-card p-5">
                 <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
                   Ingredients on file
                 </h3>
@@ -888,8 +888,8 @@ export default function ScanPage() {
         )}
 
         {status === "error" && (
-          <div className="rounded-3xl border border-danger/20 bg-danger-soft p-6 text-center">
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-danger/10 text-danger">
+          <div className="rounded-[20px] border border-danger/20 bg-danger-soft p-6 text-center">
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 text-danger">
               <AlertCircle className="h-6 w-6" />
             </div>
             <p className="font-semibold text-danger">Couldn&apos;t analyze</p>

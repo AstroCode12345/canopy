@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
     return (
       <div className="hero-bg flex min-h-dvh flex-col bg-background">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent">
             <MailCheck className="h-7 w-7" strokeWidth={1.75} />
           </span>
           <h1 className="mt-5 text-[1.6rem] font-bold tracking-tight">

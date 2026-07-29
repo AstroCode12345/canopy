@@ -180,7 +180,7 @@ export function QuickAllergenSheet({
             </p>
             <h2
               id="quick-allergen-title"
-              className="mt-1 text-xl font-bold tracking-tight"
+              className="mt-1 text-[19px] font-extrabold leading-tight"
             >
               Check for something else
             </h2>

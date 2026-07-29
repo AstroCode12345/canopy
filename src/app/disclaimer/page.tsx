@@ -25,7 +25,7 @@ export default function DisclaimerPage() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">
           About Canopy &amp; safety
         </h1>
         <p className="mt-1 text-sm text-muted">
@@ -36,7 +36,7 @@ export default function DisclaimerPage() {
       <main className="flex-1 space-y-4 px-6 pt-6 pb-32">
         {/* Important disclaimer — front and center, matches other card structure */}
         <div className="rounded-2xl border border-danger/20 bg-danger-soft p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-danger/15 text-danger">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-danger/15 text-danger">
             <AlertTriangle className="h-5 w-5" />
           </div>
           <h2 className="text-base font-semibold text-danger">
@@ -58,7 +58,7 @@ export default function DisclaimerPage() {
 
         {/* Two-up: what Canopy is / what "safe" means */}
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">The goal: quick filtering</h3>
@@ -71,7 +71,7 @@ export default function DisclaimerPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
             <ShieldAlert className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">
@@ -88,7 +88,7 @@ export default function DisclaimerPage() {
 
         {/* Tips for better scans */}
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
             <Info className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">Tips for better scans</h3>

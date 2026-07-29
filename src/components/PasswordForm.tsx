@@ -68,7 +68,7 @@ export function PasswordForm({
   if (done) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
           <Check className="h-6 w-6" />
         </div>
         <p className="font-semibold">{doneMessage}</p>

@@ -75,7 +75,7 @@ export default function AllergenCardPage() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Allergen card</h1>
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">Allergen card</h1>
         <p className="mt-1 text-sm text-muted">
           Pick every language you might need, then hand this to a waiter, a
           host, or a school nurse.
@@ -85,14 +85,14 @@ export default function AllergenCardPage() {
       <main className="flex-1 px-6 pt-4 pb-32">
         {!hydrated && (
           <div
-            className="h-72 animate-pulse rounded-3xl border border-border bg-card"
+            className="h-72 animate-pulse rounded-[20px] border border-border bg-card"
             aria-hidden
           />
         )}
 
         {hydrated && allergens.length === 0 && (
-          <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-soft">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+          <div className="rounded-[20px] border border-border bg-card p-6 text-center shadow-soft">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
               <ShieldAlert className="h-6 w-6" />
             </div>
             <p className="font-semibold">No allergens saved yet</p>
@@ -168,7 +168,7 @@ export default function AllergenCardPage() {
                 someone has to read across a counter in bad light. */}
             <div
               id="allergen-card-print"
-              className="rounded-3xl border border-border bg-white p-6 text-[#111] shadow-soft"
+              className="rounded-[20px] border border-border bg-white p-6 text-[#111] shadow-soft"
             >
               <div className="flex items-baseline justify-between gap-3 border-b border-[#111]/15 pb-3">
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">

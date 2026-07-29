@@ -19,8 +19,8 @@ export function BottomNav() {
     // print:hidden keeps app navigation off paper. The allergen card at
     // /card is the only thing in this app anyone prints, and the nav was
     // landing on it.
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70 pb-[env(safe-area-inset-bottom)] print:hidden">
-      <ul className="mx-auto flex max-w-md items-end justify-around px-2">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] print:hidden">
+      <ul className="mx-auto flex max-w-md items-end justify-around px-1.5 pb-3 pt-2.5">
         {tabs.map(({ label, icon: Icon, href, fab }) => {
           const active = pathname === href;
 
@@ -31,12 +31,15 @@ export function BottomNav() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   aria-label="Scan a label"
-                  className="mx-auto flex w-full flex-col items-center gap-1 pb-2.5 pt-2"
+                  className="mx-auto flex w-full flex-col items-center gap-1"
                 >
-                  <span className="-mt-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_10px_20px_-6px_rgb(28_122_83/0.6)] ring-4 ring-card transition-transform active:scale-95">
-                    <Icon className="h-6 w-6" strokeWidth={2} />
+                  {/* ring-4 in the nav's own background colour is what makes
+                      the FAB read as punched through the bar rather than
+                      sitting on it. */}
+                  <span className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-fab ring-4 ring-card transition-transform active:scale-95">
+                    <Icon className="h-5 w-5" strokeWidth={1.8} />
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-[0.05em] text-accent-ink">
                     {label}
                   </span>
                 </Link>
@@ -49,12 +52,22 @@ export function BottomNav() {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`mx-auto flex w-full flex-col items-center gap-1 py-3 transition-colors ${
-                  active ? "text-accent" : "text-muted/60 hover:text-foreground"
-                }`}
+                className="mx-auto flex w-full flex-col items-center gap-[3px]"
               >
-                <Icon className="h-5 w-5" strokeWidth={1.75} />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">
+                <span
+                  className={`flex h-[25px] w-9 items-center justify-center rounded-full transition-colors ${
+                    active ? "bg-accent-soft text-accent-ink" : "text-faint"
+                  }`}
+                >
+                  <Icon className="h-[17px] w-[17px]" strokeWidth={1.8} />
+                </span>
+                <span
+                  className={`font-mono text-[8px] uppercase tracking-[0.05em] transition-colors ${
+                    active
+                      ? "font-bold text-accent-ink"
+                      : "font-semibold text-faint"
+                  }`}
+                >
                   {label}
                 </span>
               </Link>

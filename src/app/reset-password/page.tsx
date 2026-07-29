@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto w-full max-w-md px-6 pt-14 pb-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">
           Set a new password
         </h1>
         <p className="mt-1 text-sm text-muted">

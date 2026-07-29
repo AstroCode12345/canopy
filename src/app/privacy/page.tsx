@@ -28,7 +28,7 @@ export default function PrivacyPage() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Privacy</h1>
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">Privacy</h1>
         <p className="mt-1 text-sm text-muted">
           What Canopy stores, what it never stores, and how to delete it.
         </p>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
 
       <main className="flex-1 space-y-4 px-6 pt-6 pb-32">
         <div className="rounded-2xl border border-accent/20 bg-accent-soft p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-accent">
             <Camera className="h-5 w-5" />
           </div>
           <h2 className="text-base font-semibold">
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-muted">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted">
             <Database className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">What Canopy stores</h3>
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-muted">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted">
             <UserCheck className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">Only you can read it</h3>
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-muted">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted">
             <Server className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-danger-soft text-danger">
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-danger-soft text-danger">
             <Trash2 className="h-5 w-5" />
           </div>
           <h3 className="text-base font-semibold">Deleting your data</h3>

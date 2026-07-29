@@ -100,7 +100,7 @@ export default function HistoryPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="px-6 pt-10 pb-2">
-        <h1 className="text-2xl font-semibold tracking-tight">History</h1>
+        <h1 className="text-[23px] font-extrabold leading-[1.2]">History</h1>
         <p className="mt-1 text-sm text-muted">
           Every label you&apos;ve scanned.
         </p>
@@ -186,7 +186,7 @@ function ScanDetailModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-card shadow-2xl md:rounded-3xl">
+      <div className="flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-card shadow-2xl md:rounded-[20px]">
         <div className="flex items-start justify-between px-6 pt-6 pb-2">
           <div className="min-w-0">
             <h2 className="truncate text-xl font-semibold tracking-tight">

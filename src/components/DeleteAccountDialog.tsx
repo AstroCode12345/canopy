@@ -82,7 +82,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
         <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-border-strong" />
 
         <div className="flex items-start justify-between gap-4">
-          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
+          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
             <AlertTriangle className="h-5 w-5" />
           </div>
           <button
@@ -98,7 +98,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
 
         <h2
           id="delete-account-title"
-          className="mt-3 text-xl font-bold tracking-tight"
+          className="mt-3 text-[19px] font-extrabold leading-tight"
         >
           Delete your account
         </h2>

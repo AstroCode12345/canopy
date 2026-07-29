@@ -83,29 +83,25 @@ export function AllergenEditor({ selected, onChange }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Severity legend */}
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-xs leading-relaxed text-muted">
-          Tap a chip to cycle through severity:
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="rounded-full bg-danger px-2.5 py-1 font-semibold uppercase tracking-wider text-white">
-            Severe
-          </span>
-          <span className="text-muted">avoid completely</span>
-          <span className="text-muted">·</span>
-          <span className="rounded-full bg-warning-soft px-2.5 py-1 font-semibold uppercase tracking-wider text-warning ring-1 ring-warning/30">
-            Mild
-          </span>
-          <span className="text-muted">be aware</span>
-        </div>
+      {/* Severity legend: an inline key, using the same pill styling as the
+          chips below so the mapping is obvious at a glance. */}
+      <div className="flex flex-wrap items-center gap-[7px] text-[11px] font-medium text-muted">
+        <span>Tap to cycle:</span>
+        <span className="inline-flex items-center rounded-full bg-danger px-2.5 py-[3px] text-[9px] font-bold uppercase tracking-[0.04em] text-white">
+          Severe
+        </span>
+        <span className="text-faint">avoid completely</span>
+        <span className="inline-flex items-center rounded-full bg-warning-soft px-2.5 py-[3px] text-[9px] font-bold uppercase tracking-[0.04em] text-warning-ink">
+          Mild
+        </span>
+        <span className="text-faint">be aware</span>
       </div>
 
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+        <h3 className="mb-[9px] font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-faint">
           Common
         </h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-[7px]">
           {COMMON.map((item) => (
             <SeverityChip
               key={item.id}
@@ -124,7 +120,7 @@ export function AllergenEditor({ selected, onChange }: Props) {
           on phones and the add looked like it silently did nothing (bug
           report 2026-07-13). */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+        <h3 className="mb-[9px] font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-faint">
           Add your own
         </h3>
         <div className="flex gap-2">
@@ -139,14 +135,14 @@ export function AllergenEditor({ selected, onChange }: Props) {
               }
             }}
             placeholder="e.g. mustard"
-            className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm outline-none focus:border-accent/60"
+            className="flex-1 rounded-full border border-border-strong bg-card px-4 py-[11px] text-[13px] font-medium outline-none placeholder:text-faint focus:border-accent/60"
           />
           <button
             type="button"
             onClick={addCustom}
             disabled={!customInput.trim()}
             aria-label="Add custom allergen"
-            className="rounded-full bg-accent px-4 py-2 text-white transition-opacity disabled:opacity-40"
+            className="flex w-[42px] shrink-0 items-center justify-center rounded-full bg-accent text-white transition-opacity disabled:opacity-40"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -154,7 +150,7 @@ export function AllergenEditor({ selected, onChange }: Props) {
 
         {customSelections.length > 0 && (
           <div className="mt-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-[7px]">
               {customSelections.map((item) => (
                 <SeverityChip
                   key={item.label}
@@ -164,7 +160,7 @@ export function AllergenEditor({ selected, onChange }: Props) {
                 />
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-muted">
+            <p className="mt-2 text-[11px] text-faint">
               Tap a chip past Mild to remove it.
             </p>
           </div>
@@ -184,16 +180,15 @@ function SeverityChip({
   onClick: () => void;
 }) {
   const base =
-    "rounded-full px-4 py-2 text-sm font-medium transition-all active:scale-95";
+    "rounded-full px-3.5 py-2 text-[12.5px] font-semibold transition-all active:scale-95";
   let style: string;
   if (severity === "allergy") {
-    style = "bg-danger text-white shadow-sm shadow-danger/30";
+    style = "bg-danger text-white";
   } else if (severity === "intolerance") {
-    style =
-      "bg-warning-soft text-warning ring-1 ring-warning/30 shadow-sm shadow-warning/15";
+    style = "bg-warning-soft text-warning-ink border border-warning";
   } else {
     style =
-      "bg-card text-foreground ring-1 ring-border hover:ring-accent/40 hover:bg-accent-soft/40";
+      "bg-card text-foreground border border-border-strong hover:border-accent/40";
   }
 
   const ariaLabel =
