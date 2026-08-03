@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { LoadError } from "@/components/LoadError";
 import {
   makeQuickAllergen,
   QuickAllergenChips,
@@ -49,6 +50,7 @@ export default function ScanPage() {
   const router = useRouter();
   const { supabase, user, profile } = useProfile();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [status, setStatus] = useState<Status>("capture");
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
@@ -104,7 +106,12 @@ export default function ScanPage() {
     let cancelled = false;
     getAllergensDb(supabase).then((list) => {
       if (cancelled) return;
-      setAllergens(list);
+      // null means the read failed. Keep that separate from an empty list:
+      // scanning against an allergen list we failed to load would check
+      // against nothing, and telling someone to "pick your allergens first"
+      // when they already have would read as their profile being wiped.
+      setLoadFailed(list === null);
+      setAllergens(list ?? []);
       setHydrated(true);
     });
     return () => {
@@ -354,6 +361,25 @@ export default function ScanPage() {
     return (
       <div className="flex min-h-dvh flex-col">
         <main className="flex-1" />
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // --- Allergen list could not be read ---
+  // Checked BEFORE the empty case, because a failed read also leaves the list
+  // empty and the two need opposite messages: one says "you have not set this
+  // up", the other says "we could not reach your data". Scanning is blocked
+  // either way, since a scan with no allergen list checks against nothing.
+  if (loadFailed) {
+    return (
+      <div className="flex min-h-dvh flex-col">
+        <header className="mx-auto w-full max-w-md px-6 pt-12">
+          <h1 className="text-[1.9rem] font-bold tracking-tight">Scan</h1>
+        </header>
+        <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 pb-28">
+          <LoadError what="your allergens" />
+        </main>
         <BottomNav />
       </div>
     );
