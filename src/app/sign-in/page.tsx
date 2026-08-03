@@ -305,6 +305,23 @@ function SignInForm() {
               </>
             )}
           </p>
+
+          {/* Creating an account is the moment allergen data starts being
+              stored, so the privacy page belongs here rather than only in
+              Settings, where you would have to already be signed up to find
+              it. */}
+          {mode === "create" && (
+            <p className="pt-1 text-center text-[12px] leading-relaxed text-faint">
+              Canopy saves your allergens and scans to your account.{" "}
+              <Link
+                href="/privacy"
+                className="font-medium text-muted underline underline-offset-2 transition-colors hover:text-foreground"
+              >
+                See exactly what it stores
+              </Link>
+              .
+            </p>
+          )}
         </form>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { LoadError } from "@/components/LoadError";
 import { AllergenEditor } from "@/components/AllergenEditor";
 import { getAllergensDb, replaceAllergensDb } from "@/lib/db";
 import { type Allergen } from "@/lib/storage";
@@ -13,16 +14,19 @@ export default function ProfilePage() {
   // Real account (middleware guarantees someone is signed in here).
   const { supabase, user, profile } = useProfile();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     if (!user) return; // wait for auth to resolve before fetching
     let cancelled = false;
     getAllergensDb(supabase).then((list) => {
       if (cancelled) return;
-      setAllergens(list);
+      setLoadFailed(list === null);
+      setAllergens(list ?? []);
       setHydrated(true);
     });
     return () => {
@@ -33,6 +37,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
+    setSaveError(false);
     const ok = await replaceAllergensDb(supabase, user.id, allergens);
     // No refetch needed: the editor keys chips on label, not id, so what's
     // on screen already reflects the saved state. Saving stores label +
@@ -40,6 +45,12 @@ export default function ProfilePage() {
     if (ok) {
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1500);
+    } else {
+      // A failed save used to do nothing at all: no flash, no error, and the
+      // edited chips still sitting on screen looking saved. On this screen
+      // specifically that means someone believes Canopy is watching for an
+      // allergen it has never been told about.
+      setSaveError(true);
     }
     setSaving(false);
   };
@@ -73,7 +84,9 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {hydrated && (
+        {hydrated && loadFailed && <LoadError what="your allergens" />}
+
+        {hydrated && !loadFailed && (
           <AllergenEditor selected={allergens} onChange={setAllergens} />
         )}
 
@@ -99,10 +112,18 @@ export default function ProfilePage() {
         className="pointer-events-none fixed inset-x-0 z-10 px-6 pb-3 pt-6 bg-gradient-to-t from-background via-background to-transparent"
         style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
       >
+        {saveError && (
+          <p
+            role="alert"
+            className="pointer-events-auto mb-2 rounded-2xl bg-danger-soft px-4 py-2.5 text-center text-[13px] font-medium leading-snug text-danger-ink"
+          >
+            Couldn&apos;t save. Your changes are still on screen, so try again.
+          </p>
+        )}
         <button
           type="button"
           onClick={handleSave}
-          disabled={!hydrated || saving}
+          disabled={!hydrated || loadFailed || saving}
           className="pointer-events-auto flex w-full items-center justify-center gap-2 rounded-full bg-accent py-[13px] font-display text-sm font-bold text-white transition-opacity disabled:opacity-40"
         >
           {savedFlash ? (

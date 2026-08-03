@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { LoadError } from "@/components/LoadError";
 import { ScanResultCard } from "@/components/ScanResultCard";
 import { deleteScanDb, getScansDb } from "@/lib/db";
 import { resultVerdict, type Scan } from "@/lib/storage";
@@ -75,6 +76,7 @@ function severityRowVisuals(scan: Scan) {
 export default function HistoryPage() {
   const { supabase, user } = useProfile();
   const [scans, setScans] = useState<Scan[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [active, setActive] = useState<Scan | null>(null);
 
@@ -83,7 +85,8 @@ export default function HistoryPage() {
     let cancelled = false;
     getScansDb(supabase).then((list) => {
       if (cancelled) return;
-      setScans(list);
+      setLoadFailed(list === null);
+      setScans(list ?? []);
       setHydrated(true);
     });
     return () => {
@@ -107,7 +110,9 @@ export default function HistoryPage() {
       </header>
 
       <main className="flex-1 space-y-3 px-6 pt-4 pb-32">
-        {hydrated && scans.length === 0 && (
+        {hydrated && loadFailed && <LoadError what="your history" />}
+
+        {hydrated && !loadFailed && scans.length === 0 && (
           <div className="rounded-2xl border border-border bg-card p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
               <Clock className="h-6 w-6 text-accent" />

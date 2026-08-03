@@ -111,8 +111,10 @@ export default function DisclaimerPage() {
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
               <span>
-                Watch for &ldquo;may contain traces of&hellip;&rdquo;
-                warnings. Canopy flags those too.
+                Canopy always shows you a &ldquo;may contain traces
+                of&hellip;&rdquo; warning it reads. Whether that also counts as
+                a flag is yours to choose in Settings, under &ldquo;Flag
+                &lsquo;may contain&rsquo; warnings&rdquo;.
               </span>
             </li>
             <li className="flex gap-2">

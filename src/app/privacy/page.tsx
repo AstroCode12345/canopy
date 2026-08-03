@@ -90,6 +90,15 @@ export default function PrivacyPage() {
                 your allergen list as it was at that moment, and the date.
               </span>
             </li>
+            <li className="flex gap-2">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+              <span>
+                A count of your scans for rate limiting: which kind of scan you
+                ran and when, with no photo, no ingredients, and no result
+                attached. It exists only to stop one account from running up an
+                unlimited bill, and it is deleted with your account.
+              </span>
+            </li>
           </ul>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             That is the whole list. There is no analytics, no advertising, no
@@ -186,10 +195,23 @@ export default function PrivacyPage() {
             that is worth reporting, and the code is public so any of this can
             be checked directly.
           </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Your data is kept until you delete it. There is no automatic
+            expiry, so an account left alone keeps its allergens and scans
+            until you clear them or delete the account.
+          </p>
+          <a
+            href="https://github.com/AstroCode12345/canopy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center rounded-full bg-surface-2 px-5 py-2.5 text-sm font-semibold text-foreground ring-1 ring-border transition-colors hover:bg-accent-soft/40"
+          >
+            Read the code on GitHub
+          </a>
         </div>
 
         <p className="px-1 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
-          Last updated 24 July 2026
+          Last updated 29 July 2026
         </p>
       </main>
 

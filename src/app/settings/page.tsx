@@ -28,6 +28,8 @@ export default function SettingsPage() {
   // happens in the background.
   const [flagMayContain, setFlagMayContain] = useState(true);
   const [scanCount, setScanCount] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [exportError, setExportError] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -40,7 +42,8 @@ export default function SettingsPage() {
     let cancelled = false;
     getScansDb(supabase).then((scans) => {
       if (cancelled) return;
-      setScanCount(scans.length);
+      setLoadFailed(scans === null);
+      setScanCount(scans?.length ?? 0);
       setHydrated(true);
     });
     return () => {
@@ -67,6 +70,15 @@ export default function SettingsPage() {
 
   const exportHistory = async () => {
     const scans = await getScansDb(supabase, 1000);
+    // Bail rather than hand over a file. A failed read used to serialise as
+    // an empty array, so "Download everything Canopy has saved" produced a
+    // valid-looking export containing none of it, with no indication that
+    // anything had gone wrong.
+    if (scans === null) {
+      setExportError(true);
+      return;
+    }
+    setExportError(false);
     const data = JSON.stringify(scans, null, 2);
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -205,7 +217,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={exportHistory}
-              disabled={!hydrated || scanCount === 0}
+              disabled={!hydrated || (!loadFailed && scanCount === 0)}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-surface-2 disabled:opacity-40"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
@@ -213,10 +225,14 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1">
                 <p className="text-[15px] font-medium">Export scan history</p>
-                <p className="text-[13px] text-faint">
-                  {hydrated
-                    ? `${scanCount} scan${scanCount === 1 ? "" : "s"} as JSON`
-                    : " "}
+                <p
+                  className={`text-[13px] ${exportError ? "text-danger-ink" : "text-faint"}`}
+                >
+                  {exportError
+                    ? "Couldn't reach your scans. Try again."
+                    : hydrated && !loadFailed
+                      ? `${scanCount} scan${scanCount === 1 ? "" : "s"} as JSON`
+                      : " "}
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 text-faint" />
@@ -225,7 +241,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={clearHistory}
-              disabled={!hydrated || scanCount === 0}
+              disabled={!hydrated || (!loadFailed && scanCount === 0)}
               className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-danger-soft disabled:opacity-40"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">

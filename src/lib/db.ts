@@ -21,14 +21,24 @@ type ScanRow = Database["public"]["Tables"]["scans"]["Row"];
 
 // ----- Allergens -----
 
-export async function getAllergensDb(supabase: Client): Promise<Allergen[]> {
+/**
+ * Returns null when the read FAILED, and [] only when the user genuinely has
+ * no allergens saved. The distinction matters more here than anywhere else in
+ * the app: this list is the entire basis of every verdict, and screens branch
+ * on it being empty. Collapsing a network error into [] told someone with a
+ * full profile "Pick your allergens first", which reads as "your allergens
+ * were deleted" rather than "we could not reach the server just now".
+ */
+export async function getAllergensDb(
+  supabase: Client,
+): Promise<Allergen[] | null> {
   const { data, error } = await supabase
     .from("allergens")
     .select("id, label, severity")
     .order("created_at", { ascending: true });
   if (error) {
     console.error("[db] getAllergensDb:", error.message);
-    return [];
+    return null;
   }
   return data;
 }
@@ -106,10 +116,11 @@ function rowToScan(row: ScanRow): Scan {
   };
 }
 
+/** Null means the read failed; [] means the user has no scans yet. */
 export async function getScansDb(
   supabase: Client,
   limit = 50,
-): Promise<Scan[]> {
+): Promise<Scan[] | null> {
   const { data, error } = await supabase
     .from("scans")
     .select("*")
@@ -117,7 +128,7 @@ export async function getScansDb(
     .limit(limit);
   if (error) {
     console.error("[db] getScansDb:", error.message);
-    return [];
+    return null;
   }
   return data.map(rowToScan);
 }

@@ -44,8 +44,13 @@ export default function WelcomePage() {
           >
             I already have an account
           </Link>
-          <p className="mt-1.5 flex items-start gap-1.5 text-center font-mono text-[11px] leading-relaxed text-faint">
-            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint" />
+          {/* Sans, not mono: mono is this system's eyebrow-label voice
+              (uppercase, tracked out) and reads as a technical annotation.
+              This is the one safety sentence a new person sees, so it should
+              read as a sentence. Left-aligned for the same reason: centring
+              three ragged lines beside a leading icon made it hard to scan. */}
+          <p className="mt-1.5 flex items-start gap-2 text-[12px] leading-relaxed text-muted">
+            <ShieldCheck className="mt-[3px] h-3.5 w-3.5 shrink-0" />
             <span>
               Canopy flags allergens it finds on a label. It can&apos;t
               promise what isn&apos;t listed, so always check the pack.

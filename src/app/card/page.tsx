@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Printer, ShieldAlert } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { LoadError } from "@/components/LoadError";
 import { getAllergensDb } from "@/lib/db";
 import type { Allergen } from "@/lib/storage";
 import { useProfile } from "@/lib/useProfile";
@@ -28,6 +29,7 @@ function nameFor(allergen: Allergen, lang: CardLanguage): string {
 export default function AllergenCardPage() {
   const { supabase, user } = useProfile();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [selected, setSelected] = useState<Set<CardLanguage>>(
     () => new Set<CardLanguage>(["en"]),
@@ -38,7 +40,8 @@ export default function AllergenCardPage() {
     let cancelled = false;
     getAllergensDb(supabase).then((list) => {
       if (cancelled) return;
-      setAllergens(list);
+      setLoadFailed(list === null);
+      setAllergens(list ?? []);
       setHydrated(true);
     });
     return () => {
@@ -75,11 +78,30 @@ export default function AllergenCardPage() {
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="text-[23px] font-extrabold leading-[1.2]">Allergen card</h1>
-        <p className="mt-1 text-sm text-muted">
-          Pick every language you might need, then hand this to a waiter, a
-          host, or a school nurse.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-[23px] font-extrabold leading-[1.2]">
+              Allergen card
+            </h1>
+            <p className="mt-1 text-sm text-muted">
+              Pick every language you might need, then hand this to a waiter, a
+              host, or a school nurse.
+            </p>
+          </div>
+          {/* Sits in the header rather than under the card: the card can run
+              several screens long once a few languages are picked, and the
+              print action should never be something you scroll to find. */}
+          {hydrated && allergens.length > 0 && (
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-soft transition active:scale-95"
+            >
+              <Printer className="h-4 w-4" />
+              Print
+            </button>
+          )}
+        </div>
       </header>
 
       <main className="flex-1 px-6 pt-4 pb-32">
@@ -90,7 +112,9 @@ export default function AllergenCardPage() {
           />
         )}
 
-        {hydrated && allergens.length === 0 && (
+        {hydrated && loadFailed && <LoadError what="your allergens" />}
+
+        {hydrated && !loadFailed && allergens.length === 0 && (
           <div className="rounded-[20px] border border-border bg-card p-6 text-center shadow-soft">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
               <ShieldAlert className="h-6 w-6" />
@@ -232,14 +256,10 @@ export default function AllergenCardPage() {
               })}
             </div>
 
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3.5 text-base font-semibold text-white shadow-soft transition active:scale-[0.99] print:hidden"
-            >
-              <Printer className="h-4 w-4" />
-              Print or save as PDF
-            </button>
+            <p className="pt-1 text-center text-[13px] text-muted print:hidden">
+              Printing also lets you save the card as a PDF to keep on your
+              phone.
+            </p>
           </div>
         )}
       </main>

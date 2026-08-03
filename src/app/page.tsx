@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { LoadError } from "@/components/LoadError";
 import { EmptyState } from "@/components/EmptyState";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { getAllergensDb, getScansDb } from "@/lib/db";
@@ -75,6 +76,7 @@ export default function HomePage() {
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [stats, setStats] = useState({ scanned: 0, flagged: 0 });
   const [meta, setMeta] = useState({ greet: "", date: "" });
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -99,18 +101,30 @@ export default function HomePage() {
     Promise.all([getScansDb(supabase), getAllergensDb(supabase)]).then(
       ([scans, list]) => {
         if (cancelled) return;
-        setRecent(scans.slice(0, 3));
-        setAllergens(list);
+        // Either read can fail independently. Treat either failure as "the
+        // page could not load" rather than rendering a confident dashboard of
+        // zeroes, which would read as "you have never scanned anything".
+        const failed = scans === null || list === null;
+        setLoadFailed(failed);
+        setRecent(scans?.slice(0, 3) ?? []);
+        setAllergens(list ?? []);
         setStats({
-          scanned: scans.length,
-          flagged: scans.filter((s) => {
+          scanned: scans?.length ?? 0,
+          flagged: (scans ?? []).filter((s) => {
             const v = resultVerdict(s.result);
             return v === "allergy" || v === "intolerance";
           }).length,
         });
 
-        // Show onboarding only on truly first-ever visit (no flag + no data)
-        if (!hasSeenOnboarding() && list.length === 0 && scans.length === 0) {
+        // Show onboarding only on truly first-ever visit (no flag + no data).
+        // Never after a failed read, or a dropped connection would look like
+        // a brand new account and re-run the tour over real data.
+        if (
+          !failed &&
+          !hasSeenOnboarding() &&
+          list!.length === 0 &&
+          scans!.length === 0
+        ) {
           setShowOnboarding(true);
         }
         setHydrated(true);
@@ -175,7 +189,7 @@ export default function HomePage() {
         <section className="flex rounded-[18px] border border-border bg-card p-1">
           <div className="m-0.5 flex flex-1 flex-col items-center gap-0.5 rounded-[14px] bg-surface-2 px-2 py-[13px]">
             <span className="font-mono text-xl font-semibold tabular-nums">
-              {hydrated ? stats.scanned : "—"}
+              {hydrated && !loadFailed ? stats.scanned : "—"}
             </span>
             <span className="text-[9px] font-semibold uppercase tracking-[0.06em] text-faint">
               Scanned
@@ -183,7 +197,7 @@ export default function HomePage() {
           </div>
           <div className="m-0.5 flex flex-1 flex-col items-center gap-0.5 px-2 py-[13px]">
             <span className="font-mono text-xl font-semibold tabular-nums text-danger">
-              {hydrated ? stats.flagged : "—"}
+              {hydrated && !loadFailed ? stats.flagged : "—"}
             </span>
             <span className="text-[9px] font-semibold uppercase tracking-[0.06em] text-faint">
               Flagged
@@ -277,7 +291,9 @@ export default function HomePage() {
             </ul>
           )}
 
-          {hydrated && recent.length === 0 && <EmptyState />}
+          {hydrated && loadFailed && <LoadError what="your recent scans" />}
+
+          {hydrated && !loadFailed && recent.length === 0 && <EmptyState />}
 
           {hydrated && recent.length > 0 && (
             <ul className="space-y-2">
